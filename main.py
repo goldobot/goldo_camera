@@ -3,8 +3,13 @@ from picamera import PiCamera
 import time
 import cv2
 from cv2 import aruco
+import numpy as np
 import zmq
 import struct
+from pb.goldo.camera.image_pb2 import Image
+from pb.goldo.camera.detections_pb2 import Detections
+
+
 
 # initialize the camera and grab a reference to the raw camera capture
 camera = PiCamera()
@@ -18,14 +23,13 @@ rawCapture2 = PiRGBArray(camera, size=(1296, 972))
 time.sleep(0.1)
 
 context = zmq.Context()    
-pub_socket = context.socket(zmq.PUB)
-pub_socket.bind('tcp://0.0.0.0:3201')
+socket_pub = context.socket(zmq.PUB)
+socket_pub.bind('tcp://*:3201')
 
-pub_socket_detection = context.socket(zmq.PUB)
-pub_socket_detection.bind('tcp://0.0.0.0:3202')
-
-socket_rpc_resp = context.socket(zmq.REP)
-socket_rpc_resp.bind('tcp://0.0.0.0:3203')
+def publishTopic(socket, topic, msg):
+    socket.send_multipart([topic.encode('utf8'),
+                           msg.DESCRIPTOR.full_name.encode('utf8'),
+                           msg.SerializeToString()])
 
 #camera.start_recording('capture.h264', splitter_port=2)
 
@@ -35,27 +39,33 @@ for frame in camera.capture_continuous(rawCapture1, format="bgr", use_video_port
     # will be 3D, representing the width, height, and # of channels
     image = frame.array
     # show the frame
-    cv2.imshow("Frame", image)
-    key = cv2.waitKey(1) & 0xFF
+    #cv2.imshow("Frame", image)
+    #key = cv2.waitKey(1) & 0xFF
     # clear the stream in preparation for the next frame
     rawCapture1.truncate(0)
     # if the `q` key was pressed, break from the loop
-    if key == ord("q"):
-        break
+    #if key == ord("q"):
+    #    break
         
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_100)
     parameters =  aruco.DetectorParameters_create()
     corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
-    print(corners, ids)
-    frame_markers = aruco.drawDetectedMarkers(image, corners, ids)
-    buff = b''
+    #frame_markers = aruco.drawDetectedMarkers(image, corners, ids)
+    detections = Detections()
     for i in range(len(corners)):
-        id = ids[i]
-        c=corners
-        #buff+= struct.pack()
-        
-        
+        detection = Detections.Detection()
+        detection.tag_id = ids[i][0]
+        tag_corners = corners[i][0]
+        vec = tag_corners[1] - tag_corners[2] + tag_corners[0] - tag_corners[3]
+        vec = vec/np.linalg.norm(vec)
+        detection.ux = vec[0]
+        detection.uy = vec[1]
+        for corner in corners[i][0]:
+             detection.corners.append(Detections.Detection.Corner(x=int(corner[0]), y=int(corner[1])))
+        detections.detections.append(detection)
+    publishTopic(socket_pub, 'camera/out/detections', detections)        
     
-    retval, buffer = cv2.imencode('.jpg', frame_markers)
-    pub_socket.send(buffer)
+    retval, buffer = cv2.imencode('.jpg', image)
+    image_proto = Image(width=image.shape[0], height=image.shape[1], encoding=Image.Encoding.JPEG, data=buffer.tobytes())
+    publishTopic(socket_pub, 'camera/out/image', image_proto)
