@@ -14,4 +14,6 @@ jobs:
         run: sudo apt-get install -y python3-opencv
       - name: Check OpenCV version
         run: python3 -c "import cv2; print(cv2.__version__)"
+      - name: Image analyser non-reg tests
+        run: python3 analyse_image_test.py -v
 
