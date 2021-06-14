@@ -1,0 +1,17 @@
+name: Analyse image
+on: [push]
+jobs:
+  Analyse-Image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone and check out repository code
+        uses: actions/checkout@v2
+      - name: Check commit
+        run: git log -1
+      - name: Update OS
+        run: sudo apt-get update
+      - name: Install dependencies
+        run: sudo apt-get install -y python3-opencv
+      - name: Check OpenCV version
+        run: python3 -c "import cv2; print(cv2.__version__)"
+
