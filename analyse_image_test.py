@@ -1,12 +1,19 @@
 import unittest
 from analyse_image import AnalyseImage
+import cv2
 
 class TestAnalyseImage(unittest.TestCase):
 
     def test_analyse_reef(self):
+        image = cv2.imread("reef01.png")
         anl = AnalyseImage()
-        res = anl.analyse_reef()
-        self.assertEqual(len(res), 0, "Should be 0")
+        # anl.debug = True # Uncomment to see images
+        detected_shapes = anl.analyse_reef(image)
+        print("detected shapes", detected_shapes)
+        self.assertEqual(len(detected_shapes), 3, "Should be 3")
+        self.assertEqual(detected_shapes[0][2], "red", "Should be red")
+        self.assertEqual(detected_shapes[1][2], "green", "Should be green")
+        self.assertEqual(detected_shapes[2][2], "red", "Should be red")
 
 if __name__ == '__main__':
     unittest.main()
