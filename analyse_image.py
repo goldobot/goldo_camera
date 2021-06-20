@@ -6,14 +6,14 @@ class AnalyseImage():
     def __init__(self):
         self.debug = False
 
-    def analyse_reef(self, image, camera_support=None):
+    def analyse_reef(self, image, scale_percent=0.5, camera_support=None):
 
         image_bgr = image.copy()
-        image_bgr = self._scale_and_crop_image(image_bgr, "image")
+        image_bgr = self._scale_and_crop_image(image_bgr, "image", scale_percent=scale_percent)
 
         if camera_support is not None:
             camera_support_cp = camera_support.copy()
-            camera_support_cp = self._scale_and_crop_image(camera_support_cp, "camera support")
+            camera_support_cp = self._scale_and_crop_image(camera_support_cp, "camera support", scale_percent=scale_percent)
             camera_support_gray = cv2.cvtColor(camera_support_cp, cv2.COLOR_BGR2GRAY)
             if self.debug:
                 cv2.imshow("camera support gray", camera_support_gray)
@@ -40,17 +40,19 @@ class AnalyseImage():
 
         return shapes
 
-    def _scale_and_crop_image(self, image, name, scale_percent=50):
+    def _scale_and_crop_image(self, image, name, scale_percent=False):
 
         if self.debug:
             cv2.imshow("%s"%name, image)
             cv2.waitKey(0)
-        height = int(image.shape[0] * scale_percent / 100)
-        width = int(image.shape[1] * scale_percent / 100)
-        resized_image = cv2.resize(image, (width, height))
-        if self.debug:
-            cv2.imshow("resized %s"%name, resized_image)
-            cv2.waitKey(0)
+        resized_image = image
+        if scale_percent:
+            height = int(image.shape[0] * scale_percent)
+            width = int(image.shape[1] * scale_percent)
+            resized_image = cv2.resize(image, (width, height))
+            if self.debug:
+                cv2.imshow("resized %s"%name, resized_image)
+                cv2.waitKey(0)
         height = int(resized_image.shape[0])
         width = int(resized_image.shape[1])
         x_crop, y_crop = 0, height//2
