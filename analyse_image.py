@@ -106,7 +106,9 @@ class AnalyseImage():
                 continue
             x, y, w, h = cv2.boundingRect(ctn)
             cv2.rectangle(image_bgr, (x, y), (x+w, y+h), (255, 0, 0), 2)
-            shapes.append((x, y, color))
+            xc, yc = x+w//2, y+h//2
+            cv2.putText(image_bgr, "+", (xc, yc), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+            shapes.append((xc, yc, color))
         if self.debug or self.check:
             cv2.imshow("%s image with rectangle"%color, image_bgr)
             cv2.waitKey(0)
