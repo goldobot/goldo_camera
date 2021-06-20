@@ -8,7 +8,8 @@ class TestAnalyseImage(unittest.TestCase):
         image = cv2.imread("reef01.png")
         camera_support = cv2.imread("camera_support.png")
         anl = AnalyseImage()
-        # anl.debug = True # Uncomment to see images
+        #anl.debug = True # Uncomment to see all images
+        #anl.check = True # Uncomment to see only final images
         detected_shapes = anl.analyse_reef(image, camera_support=camera_support)
         print("detected shapes", detected_shapes)
         self.assertEqual(len(detected_shapes), 3, "Should be 3")

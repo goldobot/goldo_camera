@@ -4,7 +4,8 @@ import numpy as np
 class AnalyseImage():
 
     def __init__(self):
-        self.debug = False
+        self.debug = False # Pop up all images including intermediate ones.
+        self.check = False # Pop up only final images.
 
     def analyse_reef(self, image, scale_percent=0.5, camera_support=None):
 
@@ -92,7 +93,7 @@ class AnalyseImage():
             x, y, w, h = cv2.boundingRect(ctn)
             cv2.rectangle(image_bgr, (x, y), (x+w, y+h), (255, 0, 0), 2)
             shapes.append((x, y, color))
-        if self.debug:
+        if self.debug or self.check:
             cv2.imshow("%s image with rectangle"%color, image_bgr)
             cv2.waitKey(0)
         shapes.sort(key=lambda shape: shape[0])
