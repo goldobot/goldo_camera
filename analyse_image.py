@@ -19,14 +19,17 @@ class AnalyseImage():
             if self.debug:
                 cv2.imshow("camera support gray", camera_support_gray)
                 cv2.waitKey(0)
+                cv2.destroyAllWindows()
             _, camera_support_mask = cv2.threshold(camera_support_gray, 10, 255, cv2.THRESH_BINARY)
             if self.debug:
                 cv2.imshow("camera mask", camera_support_mask)
                 cv2.waitKey(0)
+                cv2.destroyAllWindows()
             image_bgr = cv2.bitwise_and(image_bgr, image_bgr, mask=camera_support_mask)
             if self.debug:
                 cv2.imshow("image with camera mask", image_bgr)
                 cv2.waitKey(0)
+                cv2.destroyAllWindows()
 
         low_green, high_green = np.array([80, 20, 20]), np.array([100, 255, 255])
         image_bgr_green = image_bgr.copy()
@@ -46,6 +49,7 @@ class AnalyseImage():
         if self.debug:
             cv2.imshow("%s"%name, image)
             cv2.waitKey(0)
+            cv2.destroyAllWindows()
         resized_image = image
         if scale_percent:
             height = int(image.shape[0] * scale_percent)
@@ -54,6 +58,7 @@ class AnalyseImage():
             if self.debug:
                 cv2.imshow("resized %s"%name, resized_image)
                 cv2.waitKey(0)
+                cv2.destroyAllWindows()
         height = int(resized_image.shape[0])
         width = int(resized_image.shape[1])
         x_crop, y_crop = 0, height//2
@@ -61,6 +66,7 @@ class AnalyseImage():
         if self.debug:
             cv2.imshow("cropped %s"%name, cropped_image)
             cv2.waitKey(0)
+            cv2.destroyAllWindows()
 
         return cropped_image
 
@@ -72,20 +78,28 @@ class AnalyseImage():
         if self.debug:
             cv2.imshow("%s hsv image"%color, hsv_image)
             cv2.waitKey(0)
+            cv2.destroyAllWindows()
         hsv_image = cv2.GaussianBlur(hsv_image, (5, 5), 0)
         if self.debug:
             cv2.imshow("%s blurred hsv image"%color, hsv_image)
             cv2.waitKey(0)
+            cv2.destroyAllWindows()
         color_mask = cv2.inRange(hsv_image, low, high)
         if self.debug:
             cv2.imshow("%s color mask"%color, color_mask)
             cv2.waitKey(0)
+            cv2.destroyAllWindows()
         bgr_masked_image = cv2.bitwise_and(image_bgr, image_bgr, mask=color_mask)
         if self.debug:
             cv2.imshow("%s masked image"%color, bgr_masked_image)
             cv2.waitKey(0)
+            cv2.destroyAllWindows()
 
         gray_masked_image = cv2.cvtColor(bgr_masked_image, cv2.COLOR_BGR2GRAY)
+        if self.debug:
+            cv2.imshow("gray masked image", gray_masked_image)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
         contours, _ = cv2.findContours(gray_masked_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for ctn in contours:
             if cv2.contourArea(ctn) < 20000:
@@ -96,6 +110,7 @@ class AnalyseImage():
         if self.debug or self.check:
             cv2.imshow("%s image with rectangle"%color, image_bgr)
             cv2.waitKey(0)
+            cv2.destroyAllWindows()
         shapes.sort(key=lambda shape: shape[0])
 
         return shapes
