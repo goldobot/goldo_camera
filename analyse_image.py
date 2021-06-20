@@ -8,8 +8,8 @@ class AnalyseImage():
 
     def analyse_reef(self, image, camera_support=None):
 
-        image_cp = image.copy()
-        image_cp = self._scale_and_crop_image(image_cp, "image")
+        image_bgr = image.copy()
+        image_bgr = self._scale_and_crop_image(image_bgr, "image")
 
         if camera_support is not None:
             camera_support_cp = camera_support.copy()
@@ -22,16 +22,18 @@ class AnalyseImage():
             if self.debug:
                 cv2.imshow("camera mask", camera_support_mask)
                 cv2.waitKey(0)
-            image_cp = cv2.bitwise_and(image_cp, image_cp, mask=camera_support_mask)
+            image_bgr = cv2.bitwise_and(image_bgr, image_bgr, mask=camera_support_mask)
             if self.debug:
-                cv2.imshow("image with camera mask", image_cp)
+                cv2.imshow("image with camera mask", image_bgr)
                 cv2.waitKey(0)
 
         low_green, high_green = np.array([80, 20, 20]), np.array([100, 255, 255])
-        shapes_green = self._detect_shapes(image_cp, low_green, high_green, "green")
+        image_bgr_green = image_bgr.copy()
+        shapes_green = self._detect_shapes(image_bgr_green, low_green, high_green, "green")
 
         low_red, high_red = np.array([165, 20, 20]), np.array([185, 255, 255])
-        shapes_red = self._detect_shapes(image_cp, low_red, high_red, "red")
+        image_bgr_red = image_bgr.copy()
+        shapes_red = self._detect_shapes(image_bgr_red, low_red, high_red, "red")
 
         shapes = shapes_green + shapes_red
         shapes.sort(key=lambda shape: shape[0])
@@ -59,12 +61,11 @@ class AnalyseImage():
 
         return cropped_image
 
-    def _detect_shapes(self, image, low, high, color):
+    def _detect_shapes(self, image_bgr, low, high, color):
 
         shapes = []
 
-        image_cp = image.copy()
-        hsv_image = cv2.cvtColor(image_cp, cv2.COLOR_BGR2HSV)
+        hsv_image = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2HSV)
         if self.debug:
             cv2.imshow("%s hsv image"%color, hsv_image)
             cv2.waitKey(0)
@@ -74,9 +75,9 @@ class AnalyseImage():
             cv2.waitKey(0)
         color_mask = cv2.inRange(hsv_image, low, high)
         if self.debug:
-            cv2.imshow("%s mask"%color, color_mask)
+            cv2.imshow("%s color mask"%color, color_mask)
             cv2.waitKey(0)
-        masked_image = cv2.bitwise_and(image_cp, image_cp, mask=color_mask)
+        masked_image = cv2.bitwise_and(image_bgr, image_bgr, mask=color_mask)
         if self.debug:
             cv2.imshow("%s masked image"%color, masked_image)
             cv2.waitKey(0)
@@ -86,10 +87,10 @@ class AnalyseImage():
             if cv2.contourArea(ctn) < 20000:
                 continue
             x, y, w, h = cv2.boundingRect(ctn)
-            cv2.rectangle(image_cp, (x, y), (x+w, y+h), (255, 0, 0), 2)
+            cv2.rectangle(image_bgr, (x, y), (x+w, y+h), (255, 0, 0), 2)
             shapes.append((x, y, color))
         if self.debug:
-            cv2.imshow("%s image with rectangle"%color, image_cp)
+            cv2.imshow("%s image with rectangle"%color, image_bgr)
             cv2.waitKey(0)
         shapes.sort(key=lambda shape: shape[0])
 
