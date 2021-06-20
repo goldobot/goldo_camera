@@ -77,12 +77,13 @@ class AnalyseImage():
         if self.debug:
             cv2.imshow("%s color mask"%color, color_mask)
             cv2.waitKey(0)
-        masked_image = cv2.bitwise_and(image_bgr, image_bgr, mask=color_mask)
+        bgr_masked_image = cv2.bitwise_and(image_bgr, image_bgr, mask=color_mask)
         if self.debug:
-            cv2.imshow("%s masked image"%color, masked_image)
+            cv2.imshow("%s masked image"%color, bgr_masked_image)
             cv2.waitKey(0)
 
-        contours, _ = cv2.findContours(color_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        gray_masked_image = cv2.cvtColor(bgr_masked_image, cv2.COLOR_BGR2GRAY)
+        contours, _ = cv2.findContours(gray_masked_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for ctn in contours:
             if cv2.contourArea(ctn) < 20000:
                 continue
