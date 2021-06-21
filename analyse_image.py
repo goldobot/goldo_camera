@@ -18,6 +18,16 @@ class AnalyseImage():
 
         self.debug = False # Pop up all images including intermediate ones.
         self.check = False # Pop up only final images.
+        self.color = {
+            "green": {
+                "hsv_low": np.array([80, 20, 20]),
+                "hsv_high": np.array([100, 255, 255])
+            },
+            "red": {
+                "hsv_low": np.array([165, 20, 20]),
+                "hsv_high": np.array([185, 255, 255])
+            }
+        }
 
     def analyse_reef(self, image, scale_percent=0.5, camera_support=None):
 
@@ -43,15 +53,9 @@ class AnalyseImage():
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
 
-        low_green, high_green = np.array([80, 20, 20]), np.array([100, 255, 255])
-        image_bgr_green = image_bgr.copy()
-        shapes_green = self._detect_shapes(image_bgr_green, low_green, high_green, "green")
-
-        low_red, high_red = np.array([165, 20, 20]), np.array([185, 255, 255])
-        image_bgr_red = image_bgr.copy()
-        shapes_red = self._detect_shapes(image_bgr_red, low_red, high_red, "red")
-
-        shapes = shapes_green + shapes_red
+        shapes = []
+        for key in self.color:
+            shapes += self._detect_shapes(image_bgr.copy(), self.color[key]["hsv_low"], self.color[key]["hsv_high"], key)
         shapes.sort(key=lambda shape: shape.x)
 
         if self.debug or self.check:
@@ -92,7 +96,7 @@ class AnalyseImage():
 
         return cropped_image
 
-    def _detect_shapes(self, image_bgr, low, high, color):
+    def _detect_shapes(self, image_bgr, hsv_low, hsv_high, color):
 
         shapes = []
 
@@ -106,7 +110,7 @@ class AnalyseImage():
             cv2.imshow("%s blurred hsv image"%color, hsv_image)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
-        color_mask = cv2.inRange(hsv_image, low, high)
+        color_mask = cv2.inRange(hsv_image, hsv_low, hsv_high)
         if self.debug:
             cv2.imshow("%s color mask"%color, color_mask)
             cv2.waitKey(0)
