@@ -7,7 +7,7 @@ from skimage.feature import peak_local_max
 import matplotlib.pyplot as plt
 
 from recordtype import recordtype
-box = recordtype("box", "x y w h color")
+box = recordtype("box", "x y w h up color")
 pt = recordtype("pt", "x y")
 
 blue = (255, 0, 0)
@@ -183,7 +183,7 @@ class AnalyseImage():
             cv2.putText(image_bgr, "+", (xcl, ycl), cv2.FONT_HERSHEY_SIMPLEX, 0.6, blue, 2)
 
             xcl, ycl = x+xl, y+yl
-            info = self._merge_or_append_shape(box(xcl, ycl, wl, hl, color), shapes)
+            info = self._merge_or_append_shape(box(xcl, ycl, wl, hl, hl > wl, color), shapes)
             if self.debug:
                 cv2.imshow("%s image with %s box"%(color, info), image_bgr)
                 cv2.waitKey(0)
@@ -226,5 +226,6 @@ class AnalyseImage():
         modif_shape.y = int(0.5*(top.y-down.y))+1
         modif_shape.w = int(top.x-down.x)
         modif_shape.h = int(top.y-down.y)
+        modif_shape.up = modif_shape.h > modif_shape.w
 
         return modif_shape

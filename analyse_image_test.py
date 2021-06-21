@@ -19,6 +19,11 @@ class TestAnalyseImage(unittest.TestCase):
         self.assertEqual(detected_shapes[2].color, "green", "Should be green")
         self.assertEqual(detected_shapes[3].color, "red", "Should be red")
         self.assertEqual(detected_shapes[4].color, "red", "Should be red")
+        self.assertTrue(detected_shapes[0].up)
+        self.assertTrue(detected_shapes[1].up)
+        self.assertTrue(detected_shapes[2].up)
+        self.assertTrue(detected_shapes[3].up)
+        self.assertTrue(detected_shapes[4].up)
 
 if __name__ == '__main__':
     unittest.main()
