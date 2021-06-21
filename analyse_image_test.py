@@ -10,7 +10,7 @@ class TestAnalyseImage(unittest.TestCase):
         anl = AnalyseImage()
         #anl.debug = True # Uncomment to see all images
         #anl.check = True # Uncomment to see only final images
-        detected_shapes = anl.analyse_image(image, camera_support=camera_support)
+        detected_shapes = anl.analyse_image(image, 20000, cache=camera_support, scale_percent=0.5, crop_percent=0.5)
         for shape in detected_shapes:
             print("detected shapes", shape)
         self.assertEqual(len(detected_shapes), 5, "Should be 5")
@@ -24,6 +24,16 @@ class TestAnalyseImage(unittest.TestCase):
         self.assertTrue(detected_shapes[2].up)
         self.assertTrue(detected_shapes[3].up)
         self.assertTrue(detected_shapes[4].up)
+
+    def test_analyse_field01(self):
+        image = cv2.imread("field01.jpg")
+        field_cache = cv2.imread("field01_cache.jpg")
+        anl = AnalyseImage()
+        #anl.debug = True # Uncomment to see all images
+        #anl.check = True # Uncomment to see only final images
+        detected_shapes = anl.analyse_image(image, 200, cache=field_cache)
+        for shape in detected_shapes:
+            print("detected shapes", shape)
 
 if __name__ == '__main__':
     unittest.main()

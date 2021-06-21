@@ -29,25 +29,25 @@ class AnalyseImage():
             }
         }
 
-    def analyse_image(self, image, scale_percent=0.5, crop_percent=0.5, camera_support=None):
+    def analyse_image(self, image, min_area, scale_percent=1., crop_percent=False, cache=None):
 
         image_bgr = image.copy()
         image_bgr = self._scale_and_crop_image(image_bgr, "image", scale_percent=scale_percent, crop_percent=crop_percent)
 
-        if camera_support is not None:
-            camera_support_bgr = camera_support.copy()
-            camera_support_bgr = self._scale_and_crop_image(camera_support_bgr, "camera support", scale_percent=scale_percent, crop_percent=crop_percent)
-            camera_support_gray = cv2.cvtColor(camera_support_bgr, cv2.COLOR_BGR2GRAY)
+        if cache is not None:
+            cache_bgr = cache.copy()
+            cache_bgr = self._scale_and_crop_image(cache_bgr, "camera support", scale_percent=scale_percent, crop_percent=crop_percent)
+            cache_gray = cv2.cvtColor(cache_bgr, cv2.COLOR_BGR2GRAY)
             if self.debug:
-                cv2.imshow("camera support gray", camera_support_gray)
+                cv2.imshow("camera support gray", cache_gray)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
-            _, camera_support_mask = cv2.threshold(camera_support_gray, 10, 255, cv2.THRESH_BINARY)
+            _, cache_mask = cv2.threshold(cache_gray, 10, 255, cv2.THRESH_BINARY)
             if self.debug:
-                cv2.imshow("camera mask", camera_support_mask)
+                cv2.imshow("camera mask", cache_mask)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
-            image_bgr = cv2.bitwise_and(image_bgr, image_bgr, mask=camera_support_mask)
+            image_bgr = cv2.bitwise_and(image_bgr, image_bgr, mask=cache_mask)
             if self.debug:
                 cv2.imshow("image with camera mask", image_bgr)
                 cv2.waitKey(0)
@@ -56,7 +56,8 @@ class AnalyseImage():
         shapes = []
         for key in self.color:
             try:
-                shapes += self._detect_shapes(image_bgr.copy(), self.color[key]["hsv_low"], self.color[key]["hsv_high"], key)
+                hsv_low, hsv_high =  self.color[key]["hsv_low"], self.color[key]["hsv_high"]
+                shapes += self._detect_shapes(image_bgr.copy(), hsv_low, hsv_high, key, min_area)
             except:
                 pass # Detection (watershed, ...) may break: don't break, go on error.
         shapes.sort(key=lambda shape: shape.x)
@@ -101,7 +102,7 @@ class AnalyseImage():
 
         return cropped_image
 
-    def _detect_shapes(self, image_bgr, hsv_low, hsv_high, color):
+    def _detect_shapes(self, image_bgr, hsv_low, hsv_high, color, min_area):
 
         shapes = []
 
@@ -123,7 +124,7 @@ class AnalyseImage():
 
         contours, _ = cv2.findContours(color_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for cnt in contours:
-            if cv2.contourArea(cnt) < 20000:
+            if cv2.contourArea(cnt) < min_area:
                 continue
             x, y, w, h = cv2.boundingRect(cnt)
             self._detect_shapes_in_shape(color_mask, (x, y, w, h), color, image_bgr.copy(), shapes)
@@ -158,6 +159,11 @@ class AnalyseImage():
             axis.set_title("%s distance map : markers"%color)
             plt.show()
         if len(peak_coords) == 0:
+            info = self._merge_or_append_shape(box(x, y, w, h, h > w, color), shapes) # No peak: add as default shape.
+            if self.debug:
+                cv2.imshow("%s image with %s box"%(color, info), image_bgr)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
             return # Nothing found : keep on with watershed would crash.
 
         peak_coords_mask = np.zeros(distance.shape, dtype=bool)
