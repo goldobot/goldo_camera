@@ -29,14 +29,14 @@ class AnalyseImage():
             }
         }
 
-    def analyse_image(self, image, scale_percent=0.5, camera_support=None):
+    def analyse_image(self, image, scale_percent=0.5, crop_percent=0.5, camera_support=None):
 
         image_bgr = image.copy()
-        image_bgr = self._scale_and_crop_image(image_bgr, "image", scale_percent=scale_percent)
+        image_bgr = self._scale_and_crop_image(image_bgr, "image", scale_percent=scale_percent, crop_percent=crop_percent)
 
         if camera_support is not None:
             camera_support_bgr = camera_support.copy()
-            camera_support_bgr = self._scale_and_crop_image(camera_support_bgr, "camera support", scale_percent=scale_percent)
+            camera_support_bgr = self._scale_and_crop_image(camera_support_bgr, "camera support", scale_percent=scale_percent, crop_percent=crop_percent)
             camera_support_gray = cv2.cvtColor(camera_support_bgr, cv2.COLOR_BGR2GRAY)
             if self.debug:
                 cv2.imshow("camera support gray", camera_support_gray)
@@ -68,7 +68,7 @@ class AnalyseImage():
 
         return shapes
 
-    def _scale_and_crop_image(self, image, name, scale_percent=False):
+    def _scale_and_crop_image(self, image, name, scale_percent=False, crop_percent=False):
 
         if self.debug:
             cv2.imshow("%s"%name, image)
@@ -85,14 +85,16 @@ class AnalyseImage():
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
 
-        height = int(resized_image.shape[0])
-        width = int(resized_image.shape[1])
-        x_crop, y_crop = 0, height//2
-        cropped_image = resized_image[y_crop:height-1, x_crop:width-1]
-        if self.debug:
-            cv2.imshow("cropped %s"%name, cropped_image)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+        cropped_image = resized_image
+        if crop_percent:
+            height = int(resized_image.shape[0])
+            width = int(resized_image.shape[1])
+            x_crop, y_crop = 0, int(height * crop_percent)
+            cropped_image = resized_image[y_crop:height-1, x_crop:width-1]
+            if self.debug:
+                cv2.imshow("cropped %s"%name, cropped_image)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
 
         return cropped_image
 
