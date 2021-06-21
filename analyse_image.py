@@ -29,7 +29,7 @@ class AnalyseImage():
             }
         }
 
-    def analyse_reef(self, image, scale_percent=0.5, camera_support=None):
+    def analyse_image(self, image, scale_percent=0.5, camera_support=None):
 
         image_bgr = image.copy()
         image_bgr = self._scale_and_crop_image(image_bgr, "image", scale_percent=scale_percent)
