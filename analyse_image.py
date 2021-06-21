@@ -55,7 +55,10 @@ class AnalyseImage():
 
         shapes = []
         for key in self.color:
-            shapes += self._detect_shapes(image_bgr.copy(), self.color[key]["hsv_low"], self.color[key]["hsv_high"], key)
+            try:
+                shapes += self._detect_shapes(image_bgr.copy(), self.color[key]["hsv_low"], self.color[key]["hsv_high"], key)
+            except:
+                pass # Detection (watershed, ...) may break: don't break, go on error.
         shapes.sort(key=lambda shape: shape.x)
 
         if self.debug or self.check:
