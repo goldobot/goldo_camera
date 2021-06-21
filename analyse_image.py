@@ -10,6 +10,8 @@ from recordtype import recordtype
 box = recordtype("box", "x y w h color")
 pt = recordtype("pt", "x y")
 
+blue = (255, 0, 0)
+
 class AnalyseImage():
 
     def __init__(self):
@@ -54,8 +56,8 @@ class AnalyseImage():
 
         if self.debug or self.check:
             for shape in shapes:
-                cv2.rectangle(image_bgr, (shape.x, shape.y), (shape.x+shape.w, shape.y+shape.h), (255, 0, 0), 2)
-                cv2.putText(image_bgr, "+", (shape.x+shape.w//2, shape.y+shape.h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+                cv2.rectangle(image_bgr, (shape.x, shape.y), (shape.x+shape.w, shape.y+shape.h), blue, 2)
+                cv2.putText(image_bgr, "+", (shape.x+shape.w//2, shape.y+shape.h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, blue, 2)
             cv2.imshow("image with final box", image_bgr)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
@@ -167,9 +169,9 @@ class AnalyseImage():
                 continue
 
             xcl, ycl = x+xl, y+yl
-            cv2.rectangle(image_bgr, (xcl, ycl), (xcl+wl, ycl+hl), (255, 0, 0), 2)
+            cv2.rectangle(image_bgr, (xcl, ycl), (xcl+wl, ycl+hl), blue, 2)
             xcl, ycl = xcl+wl//2, ycl+hl//2
-            cv2.putText(image_bgr, "+", (xcl, ycl), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+            cv2.putText(image_bgr, "+", (xcl, ycl), cv2.FONT_HERSHEY_SIMPLEX, 0.6, blue, 2)
 
             xcl, ycl = x+xl, y+yl
             info = self._merge_or_append_shape(box(xcl, ycl, wl, hl, color), shapes)
