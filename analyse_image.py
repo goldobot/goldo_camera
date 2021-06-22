@@ -36,10 +36,10 @@ class AnalyseImage():
 
         if cache is not None:
             cache_bgr = cache.copy()
-            cache_bgr = self._scale_and_crop_image(cache_bgr, "camera support", scale_percent=scale_percent, crop_percent=crop_percent)
+            cache_bgr = self._scale_and_crop_image(cache_bgr, "cache", scale_percent=scale_percent, crop_percent=crop_percent)
             cache_gray = cv2.cvtColor(cache_bgr, cv2.COLOR_BGR2GRAY)
             if self.debug:
-                cv2.imshow("camera support gray", cache_gray)
+                cv2.imshow("cache gray", cache_gray)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
             _, cache_mask = cv2.threshold(cache_gray, 10, 255, cv2.THRESH_BINARY)

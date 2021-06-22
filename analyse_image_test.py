@@ -6,11 +6,11 @@ class TestAnalyseImage(unittest.TestCase):
 
     def test_analyse_reef01(self):
         image = cv2.imread("reef01.png")
-        camera_support = cv2.imread("camera_support.png")
+        reef01_cache = cv2.imread("reef01_cache.png")
         anl = AnalyseImage()
         #anl.debug = True # Uncomment to see all images
         #anl.check = True # Uncomment to see only final images
-        detected_shapes = anl.analyse_image(image, 20000, cache=camera_support, scale_percent=0.5, crop_percent=0.5)
+        detected_shapes = anl.analyse_image(image, 20000, cache=reef01_cache, scale_percent=0.5, crop_percent=0.5)
         for shape in detected_shapes:
             print("detected shapes", shape)
         self.assertEqual(len(detected_shapes), 5, "Should be 5")
@@ -31,7 +31,7 @@ class TestAnalyseImage(unittest.TestCase):
         anl = AnalyseImage()
         #anl.debug = True # Uncomment to see all images
         #anl.check = True # Uncomment to see only final images
-        detected_shapes = anl.analyse_image(image, 200, cache=field_cache)
+        detected_shapes = anl.analyse_image(image, 200, cache=field_cache, crop_percent=0.3)
         for shape in detected_shapes:
             print("detected shapes", shape)
 
