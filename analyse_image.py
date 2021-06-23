@@ -159,12 +159,12 @@ class AnalyseImage():
             cv2.destroyAllWindows()
 
         peak_coords = peak_local_max(distance, min_distance=40, labels=color_mask_zoom)
-        if self.debug:
-            _, axis = plt.subplots(1, 1)
-            axis.imshow(distance, cmap=plt.cm.gray)
-            axis.plot(peak_coords[:, 1], peak_coords[:, 0], 'r.')
-            axis.set_title("%s distance map : markers"%color)
-            plt.show()
+        #if self.debug:
+        #    _, axis = plt.subplots(1, 1)
+        #    axis.imshow(distance, cmap=plt.cm.gray)
+        #    axis.plot(peak_coords[:, 1], peak_coords[:, 0], 'r.')
+        #    axis.set_title("%s distance map : markers"%color)
+        #    plt.show()
         if len(peak_coords) == 0:
             info = self._merge_or_append_shape(box(x, y, w, h, h > w, color), shapes) # No peak: add as default shape.
             if self.debug:
