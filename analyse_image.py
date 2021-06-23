@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+import os
+import json
 
 from scipy import ndimage as ndi
 from skimage.segmentation import watershed
@@ -20,14 +22,19 @@ class AnalyseImage():
         self.check = False # Pop up only final images.
         self.color = {
             "green": {
-                "hsv_low": np.array([80, 20, 20]),
-                "hsv_high": np.array([100, 255, 255])
+                "hsv_low": [80, 20, 20],
+                "hsv_high": [100, 255, 255]
             },
             "red": {
-                "hsv_low": np.array([165, 20, 20]),
-                "hsv_high": np.array([185, 255, 255])
+                "hsv_low": [165, 20, 20],
+                "hsv_high": [185, 255, 255]
             }
         }
+
+        if os.path.exists("analyse_image.json"):
+            with open("analyse_image.json", "r") as read_file:
+                self.color = json.load(read_file)
+        print(self.color)
 
     def analyse_image(self, image, min_area, scale_percent=1., crop_percent=False, cache=None):
 
@@ -116,7 +123,7 @@ class AnalyseImage():
             cv2.imshow("%s blurred hsv image"%color, hsv_image)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
-        color_mask = cv2.inRange(hsv_image, hsv_low, hsv_high)
+        color_mask = cv2.inRange(hsv_image, np.array(hsv_low), np.array(hsv_high))
         if self.debug:
             cv2.imshow("%s color mask"%color, color_mask)
             cv2.waitKey(0)
