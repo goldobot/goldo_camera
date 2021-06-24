@@ -145,31 +145,44 @@ class AnalyseImage():
         x, y, w, h = anchor[0], anchor[1], anchor[2], anchor[3]
         color_mask_zoom = color_mask[y:y+h, x:x+w]
         if self.debug:
-            cv2.imshow("%s color mask zoom"%color, color_mask_zoom)
+            window_zoom = np.zeros(color_mask.shape)
+            window_zoom[y:y+h, x:x+w] = color_mask_zoom
+            cv2.imshow("%s color mask zoom"%color, window_zoom)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
         kernel = np.ones((5, 5), np.uint8)
         color_mask_zoom = cv2.dilate(color_mask_zoom, kernel, iterations=4) # Suppress top circle of the cup to improve watershed.
         if self.debug:
-            cv2.imshow("%s color mask zoom dilated"%color, color_mask_zoom)
+            window_zoom = np.zeros(color_mask.shape)
+            window_zoom[y:y+h, x:x+w] = color_mask_zoom
+            cv2.imshow("%s color mask zoom dilated"%color, window_zoom)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
         distance = ndi.distance_transform_edt(color_mask_zoom)
         if self.debug:
-            cv2.imshow("%s distance map"%color, distance)
+            window_zoom = np.zeros(color_mask.shape)
+            window_zoom[y:y+h, x:x+w] = distance
+            cv2.imshow("%s distance map"%color, window_zoom)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
 
         peak_coords = peak_local_max(distance, min_distance=40, labels=color_mask_zoom)
-        #if self.debug:
-        #    _, axis = plt.subplots(1, 1)
-        #    axis.imshow(distance, cmap=plt.cm.gray)
-        #    axis.plot(peak_coords[:, 1], peak_coords[:, 0], 'r.')
-        #    axis.set_title("%s distance map : markers"%color)
-        #    plt.show()
+        if self.debug:
+            _, axis = plt.subplots(1, 1)
+            window_zoom = np.zeros(color_mask.shape)
+            window_zoom[y:y+h, x:x+w] = distance
+            axis.imshow(window_zoom, cmap=plt.cm.gray)
+            axis.plot(x+peak_coords[:, 1], y+peak_coords[:, 0], 'r.')
+            axis.set_title("%s distance map : markers"%color)
+            plt.show()
         if len(peak_coords) == 0:
-            info = self._merge_or_append_shape(box(x, y, w, h, h > w, color), shapes) # No peak: add as default shape.
+            new_box = box(x, y, w, h, h > w, color)
+            info = self._merge_or_append_shape(new_box, shapes) # No peak: add as default shape.
             if self.debug:
+                clr = red if color == "red" else green
+                cv2.rectangle(image_bgr, (new_box.x, new_box.y), (new_box.x+new_box.w, new_box.y+new_box.h), clr, 2)
+                cv2.putText(image_bgr, "+", (new_box.x+new_box.w//2, new_box.y+new_box.h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, clr, 2)
+
                 cv2.imshow("%s image with %s box"%(color, info), image_bgr)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
@@ -192,38 +205,36 @@ class AnalyseImage():
             if wl < w/3:
                 continue
 
-            clr = red if color == "red" else green
-            xcl, ycl = x+xl, y+yl
-            cv2.rectangle(image_bgr, (xcl, ycl), (xcl+wl, ycl+hl), clr, 2)
-            xcl, ycl = xcl+wl//2, ycl+hl//2
-            cv2.putText(image_bgr, "+", (xcl, ycl), cv2.FONT_HERSHEY_SIMPLEX, 0.6, clr, 2)
-
-            xcl, ycl = x+xl, y+yl
-            info = self._merge_or_append_shape(box(xcl, ycl, wl, hl, hl > wl, color), shapes)
+            new_box = box(x+xl, y+yl, wl, hl, hl > wl, color)
+            info = self._merge_or_append_shape(new_box, shapes)
             if self.debug:
+                clr = red if color == "red" else green
+                cv2.rectangle(image_bgr, (new_box.x, new_box.y), (new_box.x+new_box.w, new_box.y+new_box.h), clr, 2)
+                cv2.putText(image_bgr, "+", (new_box.x+new_box.w//2, new_box.y+new_box.h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, clr, 2)
+
                 cv2.imshow("%s image with %s box"%(color, info), image_bgr)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
 
-    def _merge_or_append_shape(self, box, shapes):
+    def _merge_or_append_shape(self, new_box, shapes):
 
         for shape in shapes:
-            if shape.x-shape.w//2 <= box.x <= shape.x+shape.w//2:
-                if box.y+box.h//2 >= shape.y-shape.h//2:
-                    shape = self._merge_shape(box, shape) # Replace shape.
+            if shape.x-shape.w//2 <= new_box.x <= shape.x+shape.w//2:
+                if new_box.y+new_box.h//2 >= shape.y-shape.h//2:
+                    shape = self._merge_shape(new_box, shape) # Replace shape.
                     return "extended"
-                if box.y-box.h//2 <= shape.y+shape.h//2:
-                    shape = self._merge_shape(box, shape) # Replace shape.
+                if new_box.y-new_box.h//2 <= shape.y+shape.h//2:
+                    shape = self._merge_shape(new_box, shape) # Replace shape.
                     return "extended"
-                if box.y+box.h//2 <= shape.y+shape.h//2 and box.y-box.h//2 >= shape.y-shape.h//2:
-                    return "merged" # Box in contained in shape.
+                if new_box.y+new_box.h//2 <= shape.y+shape.h//2 and new_box.y-new_box.h//2 >= shape.y-shape.h//2:
+                    return "merged" # Box contained in existing shape.
 
-        shapes.append(box) # Add shape.
+        shapes.append(new_box) # Add shape.
         return "appended"
 
-    def _merge_shape(self, box, shape):
+    def _merge_shape(self, new_box, shape):
 
-        topB, downB = pt(box.x+box.w//2, box.y+box.h//2), pt(box.x-box.w//2, box.y-box.h//2)
+        topB, downB = pt(new_box.x+new_box.w//2, new_box.y+new_box.h//2), pt(new_box.x-new_box.w//2, new_box.y-new_box.h//2)
         topS, downS = pt(shape.x+shape.w//2, shape.y+shape.h//2), pt(shape.x-shape.w//2, shape.y-shape.h//2)
 
         top = topB
