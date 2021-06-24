@@ -6,7 +6,6 @@ import json
 from scipy import ndimage as ndi
 from skimage.segmentation import watershed
 from skimage.feature import peak_local_max
-import matplotlib.pyplot as plt
 
 from recordtype import recordtype
 box = recordtype("box", "x y w h up color")
@@ -168,24 +167,18 @@ class AnalyseImage():
 
         peak_coords = peak_local_max(distance, min_distance=40, labels=color_mask_zoom)
         if self.debug:
-            _, axis = plt.subplots(1, 1)
             window_zoom = np.zeros(color_mask.shape)
             window_zoom[y:y+h, x:x+w] = distance
-            axis.imshow(window_zoom, cmap=plt.cm.gray)
-            axis.plot(x+peak_coords[:, 1], y+peak_coords[:, 0], 'r.')
-            axis.set_title("%s distance map : markers"%color)
-            plt.show()
+            cv2.imshow("%s distance map with %d markers"%(color, len(peak_coords)), window_zoom)
+            for idx in range(len(peak_coords)):
+                pcx, pcy = x+peak_coords[idx, 1], y+peak_coords[idx, 0]
+                clr = red if color == "red" else green
+                cv2.putText(window_zoom, "+", (pcx, pcy), cv2.FONT_HERSHEY_SIMPLEX, 0.6, clr, 2)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
         if len(peak_coords) == 0:
             new_box = box(x, y, w, h, h > w, color)
-            info = self._merge_or_append_shape(new_box, shapes) # No peak: add as default shape.
-            if self.debug:
-                clr = red if color == "red" else green
-                cv2.rectangle(image_bgr, (new_box.x, new_box.y), (new_box.x+new_box.w, new_box.y+new_box.h), clr, 2)
-                cv2.putText(image_bgr, "+", (new_box.x+new_box.w//2, new_box.y+new_box.h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, clr, 2)
-
-                cv2.imshow("%s image with %s box"%(color, info), image_bgr)
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
+            self._merge_or_append_shape(new_box, shapes, color, image_bgr) # No peak: add as default shape.
             return # Nothing found : keep on with watershed would crash.
 
         peak_coords_mask = np.zeros(distance.shape, dtype=bool)
@@ -206,31 +199,36 @@ class AnalyseImage():
                 continue
 
             new_box = box(x+xl, y+yl, wl, hl, hl > wl, color)
-            info = self._merge_or_append_shape(new_box, shapes)
-            if self.debug:
-                clr = red if color == "red" else green
-                cv2.rectangle(image_bgr, (new_box.x, new_box.y), (new_box.x+new_box.w, new_box.y+new_box.h), clr, 2)
-                cv2.putText(image_bgr, "+", (new_box.x+new_box.w//2, new_box.y+new_box.h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, clr, 2)
+            self._merge_or_append_shape(new_box, shapes, color, image_bgr)
 
-                cv2.imshow("%s image with %s box"%(color, info), image_bgr)
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
+    def _merge_or_append_shape(self, new_box, shapes, color, image_bgr):
 
-    def _merge_or_append_shape(self, new_box, shapes):
-
+        info, add_shape = "appended", True
         for shape in shapes:
             if shape.x-shape.w//2 <= new_box.x <= shape.x+shape.w//2:
                 if new_box.y+new_box.h//2 >= shape.y-shape.h//2:
                     shape = self._merge_shape(new_box, shape) # Replace shape.
-                    return "extended"
+                    info = "extended"
+                    add_shape = False
                 if new_box.y-new_box.h//2 <= shape.y+shape.h//2:
                     shape = self._merge_shape(new_box, shape) # Replace shape.
-                    return "extended"
+                    info = "extended"
+                    add_shape = False
                 if new_box.y+new_box.h//2 <= shape.y+shape.h//2 and new_box.y-new_box.h//2 >= shape.y-shape.h//2:
-                    return "merged" # Box contained in existing shape.
+                    info = "merged" # Box contained in existing shape.
+                    add_shape = False
 
-        shapes.append(new_box) # Add shape.
-        return "appended"
+        if self.debug:
+            clr = red if color == "red" else green
+            cv2.rectangle(image_bgr, (new_box.x, new_box.y), (new_box.x+new_box.w, new_box.y+new_box.h), clr, 2)
+            cv2.putText(image_bgr, "+", (new_box.x+new_box.w//2, new_box.y+new_box.h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, clr, 2)
+
+            cv2.imshow("%s image with %s box"%(color, info), image_bgr)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
+        if add_shape:
+            shapes.append(new_box) # Add shape.
 
     def _merge_shape(self, new_box, shape):
 
