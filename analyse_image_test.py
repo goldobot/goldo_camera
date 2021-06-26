@@ -9,6 +9,7 @@ class TestAnalyseImage(unittest.TestCase):
         reef01_cache = cv2.imread("reef01_cache.png")
         anl = AnalyseImage()
         #anl.debug = True # Uncomment to see all images
+        #anl.color_mask = True # Uncomment to see only images with color mask
         #anl.check = True # Uncomment to see only final images
         detected_shapes = anl.analyse_image(image, 20000, cache=reef01_cache, scale_percent=0.5, crop_percent=0.5)
         for shape in detected_shapes:
@@ -30,6 +31,7 @@ class TestAnalyseImage(unittest.TestCase):
         field_cache = cv2.imread("field01_cache.jpg")
         anl = AnalyseImage()
         #anl.debug = True # Uncomment to see all images
+        #anl.color_mask = True # Uncomment to see only images with color mask
         #anl.check = True # Uncomment to see only final images
         detected_shapes = anl.analyse_image(image, 200, cache=field_cache, crop_percent=0.3)
         for shape in detected_shapes:

@@ -20,6 +20,7 @@ class AnalyseImage():
 
         self.debug = False # Pop up all images including intermediate ones.
         self.check = False # Pop up only final images.
+        self.color_mask = False # Pop up only images with color mask.
         self.color = {
             "green": {
                 "hsv_low": [80, 20, 20],
@@ -129,7 +130,7 @@ class AnalyseImage():
             cv2.waitKey(0)
             cv2.destroyAllWindows()
         color_mask = cv2.inRange(hsv_image, np.array(hsv_low), np.array(hsv_high))
-        if self.debug:
+        if self.debug or self.color_mask:
             cv2.imshow("%s color mask"%color, color_mask)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
