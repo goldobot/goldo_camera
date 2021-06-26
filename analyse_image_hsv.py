@@ -38,9 +38,13 @@ def saveColor(x):
     with open("analyse_image.json", "w") as read_file:
         dct = json.dump(dct, read_file)
 
-def main(path):
+def main(path, scale_percent=None):
     # Load in image
     image = cv2.imread(path)
+    if scale_percent:
+        height = int(image.shape[0] * scale_percent)
+        width = int(image.shape[1] * scale_percent)
+        image = cv2.resize(image, (width, height))
 
     # Create a window
     cv2.namedWindow('image')
@@ -107,4 +111,5 @@ def main(path):
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
-        main(sys.argv[1])
+        scale_percent = None if len(sys.argv) == 2 else float(sys.argv[2])
+        main(sys.argv[1], scale_percent=scale_percent)
