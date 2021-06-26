@@ -237,6 +237,23 @@ class AnalyseImage():
         if self.debug:
             self._show_image_with_detected_shapes("intermediate", shapes, image_bgr.copy())
 
+    def _show_image_with_detected_box(self, color, info, new_box, old_shape, new_shape, image_bgr):
+
+        clr = red if color == "red" else green
+        cv2.rectangle(image_bgr, (new_box.x, new_box.y), (new_box.x+new_box.w, new_box.y+new_box.h), clr, 2)
+        cv2.putText(image_bgr, "+", (new_box.x+new_box.w//2, new_box.y+new_box.h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, clr, 2)
+        if old_shape is not None:
+            clr = (255, 255, 255) # White.
+            cv2.rectangle(image_bgr, (old_shape.x, old_shape.y), (old_shape.x+old_shape.w, old_shape.y+old_shape.h), clr, 2)
+            cv2.putText(image_bgr, "+", (old_shape.x+old_shape.w//2, old_shape.y+old_shape.h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, clr, 2)
+        if new_shape is not None:
+            clr = (0, 0, 0) # Black.
+            cv2.rectangle(image_bgr, (new_shape.x, new_shape.y), (new_shape.x+new_shape.w, new_shape.y+new_shape.h), clr, 2)
+            cv2.putText(image_bgr, "+", (new_shape.x+new_shape.w//2, new_shape.y+new_shape.h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, clr, 2)
+        cv2.imshow("%s image with %s box"%(color, info), image_bgr)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
     def _merge_shape(self, new_box, shape):
 
         topB, downB = pt(new_box.x+new_box.w//2, new_box.y+new_box.h//2), pt(new_box.x-new_box.w//2, new_box.y-new_box.h//2)
