@@ -70,15 +70,19 @@ class AnalyseImage():
         shapes.sort(key=lambda shape: shape.x)
 
         if self.debug or self.check:
-            for shape in shapes:
-                clr = red if shape.color == "red" else green
-                cv2.rectangle(image_bgr, (shape.x, shape.y), (shape.x+shape.w, shape.y+shape.h), clr, 2)
-                cv2.putText(image_bgr, "+", (shape.x+shape.w//2, shape.y+shape.h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, clr, 2)
-            cv2.imshow("image with final box", image_bgr)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+            self._show_image_with_detected_shapes("final", shapes, image_bgr.copy())
 
         return shapes
+
+    def _show_image_with_detected_shapes(self, step, shapes, image_bgr):
+
+        for shape in shapes:
+            clr = red if shape.color == "red" else green
+            cv2.rectangle(image_bgr, (shape.x, shape.y), (shape.x+shape.w, shape.y+shape.h), clr, 2)
+            cv2.putText(image_bgr, "+", (shape.x+shape.w//2, shape.y+shape.h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, clr, 2)
+        cv2.imshow("image with all %s shapes"%step, image_bgr)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
     def _scale_and_crop_image(self, image, name, scale_percent=False, crop_percent=False):
 
@@ -229,6 +233,9 @@ class AnalyseImage():
 
         if add_shape:
             shapes.append(new_box) # Add shape.
+
+        if self.debug:
+            self._show_image_with_detected_shapes("intermediate", shapes, image_bgr.copy())
 
     def _merge_shape(self, new_box, shape):
 
