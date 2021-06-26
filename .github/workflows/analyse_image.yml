@@ -1,0 +1,21 @@
+name: Analyse image
+on: [push]
+jobs:
+  Analyse-Image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone and check out repository code
+        uses: actions/checkout@v2
+      - name: Check commit
+        run: git log -1
+      - name: Update OS
+        run: sudo apt-get update
+      - name: Install apt-get dependencies
+        run: sudo apt-get install -y python3-opencv python3-scipy
+      - name: Install pip dependencies
+        run: sudo pip3 install scikit-image recordtype
+      - name: Check OpenCV version
+        run: python3 -c "import cv2; print(cv2.__version__)"
+      - name: Image analyser non-reg tests
+        run: python3 analyse_image_test.py -v
+

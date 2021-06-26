@@ -1,0 +1,3 @@
+- sauvegarde NON automatique : il faut repasser par 0 avant de refaire une sauvegarde dans le json
+- le range des couleurs HSV est CRITIQUE pour la detection : ajuster les maxs ET les mins autant que possible
+- analyse_image_hsv : appuyer sur 'q' pour sortir
