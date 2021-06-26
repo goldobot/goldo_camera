@@ -37,7 +37,7 @@ class AnalyseImage():
                 self.color = json.load(read_file)
         print(self.color)
 
-    def analyse_image(self, image, min_area, scale_percent=1., crop_percent=False, cache=None):
+    def analyse_image(self, image, min_area, max_feat_dist=35, scale_percent=1., crop_percent=False, cache=None):
 
         image_bgr = image.copy()
         image_bgr = self._scale_and_crop_image(image_bgr, "image", scale_percent=scale_percent, crop_percent=crop_percent)
@@ -65,7 +65,7 @@ class AnalyseImage():
         for key in self.color:
             try:
                 hsv_low, hsv_high =  self.color[key]["hsv_low"], self.color[key]["hsv_high"]
-                shapes += self._detect_shapes(image_bgr.copy(), hsv_low, hsv_high, key, min_area)
+                shapes += self._detect_shapes(image_bgr.copy(), hsv_low, hsv_high, key, min_area, max_feat_dist)
             except:
                 pass # Detection (watershed, ...) may break: don't break, go on error.
         shapes.sort(key=lambda shape: shape.x)
@@ -115,7 +115,7 @@ class AnalyseImage():
 
         return cropped_image
 
-    def _detect_shapes(self, image_bgr, hsv_low, hsv_high, color, min_area):
+    def _detect_shapes(self, image_bgr, hsv_low, hsv_high, color, min_area, max_feat_dist):
 
         shapes = []
 
@@ -140,9 +140,61 @@ class AnalyseImage():
             if cv2.contourArea(cnt) < min_area:
                 continue
             x, y, w, h = cv2.boundingRect(cnt)
+            is_a_cup = self._is_a_cup(image_bgr.copy(), (x, y, w, h), color, shapes, max_feat_dist)
+            if is_a_cup:
+                continue
             self._detect_shapes_in_shape(color_mask, (x, y, w, h), color, image_bgr.copy(), shapes)
 
         return shapes
+
+    def _is_a_cup(self, image_bgr, anchor, color, shapes, max_feat_dist):
+
+        for cup_ref_name in ["cup_ref_standing.png", "cup_ref_reversed.png"]:
+            orb = cv2.ORB_create(nfeatures=100)
+            cup_ref_bgr = cv2.imread(cup_ref_name)
+            cup_ref_gray = cv2.cvtColor(cup_ref_bgr, cv2.COLOR_BGR2GRAY)
+            cup_kp_ref, cup_dsc_ref = orb.detectAndCompute(cup_ref_gray, None)
+
+            x, y, w, h = anchor[0], anchor[1], anchor[2], anchor[3]
+            cup_zoom_bgr = image_bgr[y:y+h, x:x+w]
+            cup_zoom_gray = cv2.cvtColor(cup_zoom_bgr, cv2.COLOR_BGR2GRAY)
+            if self.debug:
+                cv2.imshow("%s cup zoom"%color, cup_zoom_bgr)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
+            cup_kp_zoom, cup_dsc_zoom = orb.detectAndCompute(cup_zoom_gray, None)
+            if self.debug:
+                print("orb %s - len(cup_kp_zoom)"%cup_ref_name, len(cup_kp_zoom))
+            if len(cup_kp_zoom) == 0 or cup_dsc_zoom is None:
+                continue
+
+            bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+            cup_matches = bf.match(cup_dsc_ref, cup_dsc_zoom)
+            if self.debug:
+                print("orb %s - len(cup_matches)"%cup_ref_name, len(cup_matches))
+            if len(cup_matches) == 0:
+                continue
+
+            cup_matches = sorted(cup_matches, key = lambda x: x.distance)
+            if self.debug:
+                for idx, mn in enumerate(cup_matches):
+                    print("orb %s - cup_matches %3d"%(cup_ref_name, idx), mn.distance)
+
+                cup_ref_bgr = cv2.drawKeypoints(cup_ref_bgr, cup_kp_ref, None)
+                cup_zoom_bgr = cv2.drawKeypoints(cup_zoom_bgr, cup_kp_zoom, None)
+
+                cv2.imshow("cup_ref_bgr", cup_ref_bgr)
+                cv2.imshow("cup_zoom_bgr", cup_zoom_bgr)
+                cup_draw_match = cv2.drawMatches(cup_ref_bgr, cup_kp_ref, cup_zoom_bgr, cup_kp_zoom, cup_matches, None)
+                cv2.imshow("cup_draw_match", cup_draw_match)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
+            if cup_matches[0].distance < max_feat_dist:
+                new_box = box(x, y, w, h, h > w, color)
+                self._append_shape(new_box, shapes, color, image_bgr) # No peak: add as default shape.
+                return True
+
+        return False
 
     def _detect_shapes_in_shape(self, color_mask, anchor, color, image_bgr, shapes):
 
@@ -183,7 +235,7 @@ class AnalyseImage():
             cv2.destroyAllWindows()
         if len(peak_coords) == 0:
             new_box = box(x, y, w, h, h > w, color)
-            self._merge_or_append_shape(new_box, shapes, color, image_bgr) # No peak: add as default shape.
+            self._append_shape(new_box, shapes, color, image_bgr) # No peak: add as default shape.
             return # Nothing found : keep on with watershed would crash.
 
         peak_coords_mask = np.zeros(distance.shape, dtype=bool)
@@ -204,79 +256,11 @@ class AnalyseImage():
                 continue
 
             new_box = box(x+xl, y+yl, wl, hl, hl > wl, color)
-            self._merge_or_append_shape(new_box, shapes, color, image_bgr)
+            self._append_shape(new_box, shapes, color, image_bgr)
 
-    def _merge_or_append_shape(self, new_box, shapes, color, image_bgr):
+    def _append_shape(self, new_box, shapes, color, image_bgr):
 
-        info, add_shape = "appended", True
-        for shape in shapes:
-            if shape.x-shape.w//2 <= new_box.x <= shape.x+shape.w//2:
-                if new_box.y+new_box.h//2 >= shape.y-shape.h//2:
-                    shape = self._merge_shape(new_box, shape) # Replace shape.
-                    info = "extended"
-                    add_shape = False
-                if new_box.y-new_box.h//2 <= shape.y+shape.h//2:
-                    shape = self._merge_shape(new_box, shape) # Replace shape.
-                    info = "extended"
-                    add_shape = False
-                if new_box.y+new_box.h//2 <= shape.y+shape.h//2 and new_box.y-new_box.h//2 >= shape.y-shape.h//2:
-                    info = "merged" # Box contained in existing shape.
-                    add_shape = False
-
-        if self.debug:
-            clr = red if color == "red" else green
-            cv2.rectangle(image_bgr, (new_box.x, new_box.y), (new_box.x+new_box.w, new_box.y+new_box.h), clr, 2)
-            cv2.putText(image_bgr, "+", (new_box.x+new_box.w//2, new_box.y+new_box.h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, clr, 2)
-
-            cv2.imshow("%s image with %s box"%(color, info), image_bgr)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-
-        if add_shape:
-            shapes.append(new_box) # Add shape.
+        shapes.append(new_box) # Add shape.
 
         if self.debug:
             self._show_image_with_detected_shapes("intermediate", shapes, image_bgr.copy())
-
-    def _show_image_with_detected_box(self, color, info, new_box, old_shape, new_shape, image_bgr):
-
-        clr = red if color == "red" else green
-        cv2.rectangle(image_bgr, (new_box.x, new_box.y), (new_box.x+new_box.w, new_box.y+new_box.h), clr, 2)
-        cv2.putText(image_bgr, "+", (new_box.x+new_box.w//2, new_box.y+new_box.h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, clr, 2)
-        if old_shape is not None:
-            clr = (255, 255, 255) # White.
-            cv2.rectangle(image_bgr, (old_shape.x, old_shape.y), (old_shape.x+old_shape.w, old_shape.y+old_shape.h), clr, 2)
-            cv2.putText(image_bgr, "+", (old_shape.x+old_shape.w//2, old_shape.y+old_shape.h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, clr, 2)
-        if new_shape is not None:
-            clr = (0, 0, 0) # Black.
-            cv2.rectangle(image_bgr, (new_shape.x, new_shape.y), (new_shape.x+new_shape.w, new_shape.y+new_shape.h), clr, 2)
-            cv2.putText(image_bgr, "+", (new_shape.x+new_shape.w//2, new_shape.y+new_shape.h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.6, clr, 2)
-        cv2.imshow("%s image with %s box"%(color, info), image_bgr)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-    def _merge_shape(self, new_box, shape):
-
-        topB, downB = pt(new_box.x+new_box.w//2, new_box.y+new_box.h//2), pt(new_box.x-new_box.w//2, new_box.y-new_box.h//2)
-        topS, downS = pt(shape.x+shape.w//2, shape.y+shape.h//2), pt(shape.x-shape.w//2, shape.y-shape.h//2)
-
-        top = topB
-        if topS.x > top.x:
-            top.x = topS.x
-        if topS.y > top.y:
-            top.y = topS.y
-
-        down = downB
-        if downS.x < down.x:
-            down.x = downS.x
-        if downS.y < down.y:
-            down.y = downS.y
-
-        modif_shape = shape
-        modif_shape.x = int(0.5*(top.x-down.x))+1
-        modif_shape.y = int(0.5*(top.y-down.y))+1
-        modif_shape.w = int(top.x-down.x)
-        modif_shape.h = int(top.y-down.y)
-        modif_shape.up = modif_shape.h > modif_shape.w
-
-        return modif_shape
