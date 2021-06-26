@@ -10,8 +10,10 @@ jobs:
         run: git log -1
       - name: Update OS
         run: sudo apt-get update
-      - name: Install dependencies
+      - name: Install apt-get dependencies
         run: sudo apt-get install -y python3-opencv python3-scipy
+      - name: Install pip dependencies
+        run: sudo pip3 install scikit-image recordtype
       - name: Check OpenCV version
         run: python3 -c "import cv2; print(cv2.__version__)"
       - name: Image analyser non-reg tests
