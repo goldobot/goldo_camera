@@ -264,6 +264,7 @@ class AnalyseImage():
             top.x = topS.x
         if topS.y > top.y:
             top.y = topS.y
+
         down = downB
         if downS.x < down.x:
             down.x = downS.x
