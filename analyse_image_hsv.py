@@ -1,3 +1,6 @@
+# python3 analyse_image_hsv.py field01.jpg
+# python3 analyse_image_hsv.py harbor01.png 0.25
+
 import cv2
 import sys
 import numpy as np
