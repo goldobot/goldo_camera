@@ -15,9 +15,6 @@ import io
 
 from detect_aruco import detectArucos
 
-
-
-
 # initialize the camera and grab a reference to the raw camera capture
 camera = PiCamera()
 camera.resolution = (1296, 976)
@@ -32,11 +29,11 @@ time.sleep(0.1)
 
 context = zmq.Context()    
 socket_pub = context.socket(zmq.PUB)
-socket_pub.bind('tcp://*:3201')
+socket_pub.connect('tcp://localhost:3802')
 
 socket_sub = context.socket(zmq.SUB)
-socket_sub.setsockopt(zmq.SUBSCRIBE, b'')
-socket_sub.bind('tcp://*:3202')
+socket_sub.connect('tcp://localhost:3801')
+socket_sub.setsockopt(zmq.SUBSCRIBE, b'camera/in')
 
 def publishTopic(socket, topic, msg):
     socket.send_multipart([topic.encode('utf8'),
@@ -120,4 +117,3 @@ for frame in camera.capture_continuous(rawCapture1, format="bgr", use_video_port
     
     retval, buffer = cv2.imencode('.jpg', image)
     image_proto = Image(width=image.shape[0], height=image.shape[1], encoding=Image.Encoding.JPEG, data=buffer.tobytes())
-    publishTopic(socket_pub, 'camera/out/image', image_proto)
