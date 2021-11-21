@@ -54,7 +54,7 @@ def cmdLineArgs():
             if len(corners) > 0:
                 print("[INFO] auto-detected type: found {} '{}' markers".format(len(corners), arucoName))
                 args.type = arucoName
-        cv2.imshow('determining type...', frame)
+        cv2.imshow('detecting type...', frame)
         cv2.waitKey(1)
     if vid:
         vid.release()
@@ -144,7 +144,7 @@ def main():
         detectARUCO(args, frame, socket)
 
         # Display the resulting frame.
-        cv2.imshow('video', frame)
+        cv2.imshow('raw video', frame)
 
         # Press 'q' to quit.
         if cv2.waitKey(1) & 0xFF == ord('q'):
