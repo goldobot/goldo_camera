@@ -3,7 +3,7 @@ import argparse
 import sys
 import cv2
 import zmq
-import eyeInTheSky_pb2
+import cosmorak_pb2
 
 # ArUco types.
 ARUCO_DICT = {
@@ -110,7 +110,7 @@ def detectARUCO(args, frame, socket):
                         0.5, (0, 255, 0), 2)
 
             # Publish data with ZMQ.
-            data = eyeInTheSky_pb2.data()
+            data = cosmorak_pb2.data()
             data.markerID = markerID
             data.cX = cX
             data.cY = cY
