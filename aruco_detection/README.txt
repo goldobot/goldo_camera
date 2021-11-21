@@ -10,10 +10,10 @@ Use:
 brancher la camera: camera <=> /dev/videox
 
 Pour protobuf:
->> protoc -I=. --python_out=. ./eyeInTheSky.proto
+>> protoc -I=. --python_out=. ./cosmorak.proto
 
 Dans un terminal, lancer le publisher zmq:
->> python3 eyeInTheSky.py --video x
+>> python3 cosmorak.py --video x
 
 Dans un autre terminal, lancer le subscriber zmq:
 >> python3 robot.py 

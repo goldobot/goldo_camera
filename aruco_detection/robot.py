@@ -3,7 +3,7 @@ import argparse
 import sys
 import cv2
 import zmq
-import eyeInTheSky_pb2
+import cosmorak_pb2
 
 def cmdLineArgs():
     # Create parser.
@@ -29,7 +29,7 @@ def main():
     # Listening to published data.
     while True:
         raw = socket.recv()
-        data = eyeInTheSky_pb2.data()
+        data = cosmorak_pb2.data()
         data.ParseFromString(raw)
         print('[INFO] detected ArUco marker: ID={}, c=({}, {}), u=({}, {}), v=({}, {})'.format(data.markerID, data.cX, data.cY, data.uX, data.uY, data.vX, data.vY))
 
