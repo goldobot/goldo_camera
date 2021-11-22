@@ -27,11 +27,14 @@ def main():
     socket.subscribe('')
 
     # Listening to published data.
+    print('Analysing video...')
     while True:
         raw = socket.recv()
         data = cosmorak_pb2.data()
+        if data == 'q':
+            break
         data.ParseFromString(raw)
-        print('[INFO] detected ArUco marker: ID={}, c=({}, {}), u=({}, {}), v=({}, {})'.format(data.markerID, data.cX, data.cY, data.uX, data.uY, data.vX, data.vY))
+        print('  Detected ArUco marker: ID={}, c=({}, {}), u=({}, {}), v=({}, {})'.format(data.markerID, data.cX, data.cY, data.uX, data.uY, data.vX, data.vY))
 
 # Main program.
 if __name__ == '__main__':
