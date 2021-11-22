@@ -30,16 +30,9 @@ ARUCO_DICT = {
     'DICT_APRILTAG_36h11': cv2.aruco.DICT_APRILTAG_36h11
 }
 
-def cmdLineArgs():
-    # Create parser.
-    parser = argparse.ArgumentParser(description='Publisher parser.')
-    parser.add_argument('--video', type=int)
-    parser.add_argument('--type', type=str, default='')
-    parser.add_argument('--host', type=str, default='127.0.0.1')
-    parser.add_argument('--port', type=int, default=2000)
-    args = parser.parse_args()
-
-    # Determine type if unknown.
+def autoDetectType(args):
+    # Auto-detection of type if type is unknown.
+    print('Auto-detecting types...')
     vid = None
     while args.type == '': # Unknown type.
         if vid is None:
@@ -52,13 +45,25 @@ def cmdLineArgs():
             (corners, ids, rejected) = cv2.aruco.detectMarkers(frame, arucoDict,
                                                                parameters=arucoParams)
             if len(corners) > 0:
-                print("[INFO] auto-detected type: found {} '{}' markers".format(len(corners), arucoName))
+                print("  Auto-detected type: found {} '{}' markers".format(len(corners), arucoName))
                 args.type = arucoName
-        cv2.imshow('detecting type...', frame)
+        cv2.imshow('Detecting type...', frame)
         cv2.waitKey(1)
     if vid:
         vid.release()
         cv2.destroyAllWindows()
+
+def cmdLineArgs():
+    # Create parser.
+    parser = argparse.ArgumentParser(description='Publisher parser.')
+    parser.add_argument('--video', type=int)
+    parser.add_argument('--type', type=str, default='')
+    parser.add_argument('--host', type=str, default='127.0.0.1')
+    parser.add_argument('--port', type=int, default=2000)
+    args = parser.parse_args()
+
+    # Determine type if unknown.
+    autoDetectType(args)
 
     return args
 
@@ -136,6 +141,7 @@ def main():
     vid = cv2.VideoCapture(args.video)
 
     # Capture video.
+    print('Analysing video... [Press q to quit]')
     while(True):
         # Capture the video frame by frame.
         _, frame = vid.read()
@@ -144,7 +150,7 @@ def main():
         detectARUCO(args, frame, socket)
 
         # Display the resulting frame.
-        cv2.imshow('raw video', frame)
+        cv2.imshow('Raw video', frame)
 
         # Press 'q' to quit.
         if cv2.waitKey(1) & 0xFF == ord('q'):
