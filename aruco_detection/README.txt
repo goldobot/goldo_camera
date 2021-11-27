@@ -1,13 +1,16 @@
 Installation:
 -------------
 
-~> pip install opencv-contrib-python zmq protobuf
+~> pip install opencv-contrib-python zmq protobuf h5py
 ~> sudo apt-get install protobuf-compiler
 
 Utilisation:
 ------------
 
 brancher la camera: camera <=> /dev/videoX
+
+Pour calibrer la camera:
+>> python3 cameraCalibration.py --video X
 
 Pour protobuf:
 >> protoc -I=. --python_out=. ./cosmorak.proto
