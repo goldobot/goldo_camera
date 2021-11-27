@@ -141,7 +141,7 @@ def main():
     vid = cv2.VideoCapture(args.video)
 
     # Capture video.
-    print('Analysing video... [Press q to quit]')
+    print('Analysing video... [q quit]')
     while(True):
         # Capture the video frame by frame.
         _, frame = vid.read()
@@ -150,10 +150,10 @@ def main():
         detectARUCO(args, frame, socket)
 
         # Display the resulting frame.
-        cv2.imshow('Raw video', frame)
+        cv2.imshow('Raw video [q quit]', frame)
 
         # Press 'q' to quit.
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(1) == ord('q'):
             break
 
     # After the loop release the cap object.
