@@ -56,7 +56,7 @@ def autoDetectType(args):
 def cmdLineArgs():
     # Create parser.
     parser = argparse.ArgumentParser(description='Publisher parser.')
-    parser.add_argument('--video', type=int)
+    parser.add_argument('--video', type=int, required=True)
     parser.add_argument('--type', type=str, default='')
     parser.add_argument('--host', type=str, default='127.0.0.1')
     parser.add_argument('--port', type=int, default=2000)
