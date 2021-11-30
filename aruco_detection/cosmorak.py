@@ -47,7 +47,7 @@ def autoDetectType(args):
             if len(corners) > 0:
                 print("  Auto-detected type: found {} '{}' markers".format(len(corners), arucoName))
                 args.type = arucoName
-        cv2.imshow('Detecting type...', frame)
+        cv2.imshow('Auto-detecting types...', frame)
         cv2.waitKey(1)
     if vid:
         vid.release()
