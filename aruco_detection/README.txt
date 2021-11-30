@@ -1,8 +1,8 @@
 Installation:
 -------------
 
-~> pip install opencv-contrib-python zmq protobuf h5py
-~> sudo apt-get install protobuf-compiler
+~> pip3 install opencv-contrib-python zmq protobuf h5py Pillow
+~> sudo apt-get install protobuf-compiler python3-tk python3-pil.imagetk
 
 Utilisation:
 ------------
