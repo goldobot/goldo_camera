@@ -8,12 +8,12 @@ import h5py
 def calibrateCamera(obj, img, gray):
     # Camera calibration.
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(obj, img, gray.shape[::-1], None, None)
-    fdh = h5py.File("cameraCalibration.h5", "w")
-    fdh['ret'] = ret
-    fdh['mtx'] = mtx
-    fdh['dist'] = dist
-    fdh['rvecs'] = rvecs
-    fdh['tvecs'] = tvecs
+    fdh = h5py.File('cameraCalibration.h5', 'w')
+    fdh.create_dataset('ret', data=ret)
+    fdh.create_dataset('mtx', data=mtx)
+    fdh.create_dataset('dist', data=dist)
+    fdh.create_dataset('rvecs', data=rvecs)
+    fdh.create_dataset('tvecs', data=tvecs)
     fdh.close()
 
 def chessboardCalibration(args, frame, obj, img):
