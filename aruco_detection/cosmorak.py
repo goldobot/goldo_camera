@@ -6,6 +6,8 @@ import zmq
 import cosmorak_pb2
 import tkinter
 import PIL.Image, PIL.ImageTk
+import os
+import h5py
 
 # ArUco types.
 ARUCO_DICT = {
@@ -67,7 +69,7 @@ class VideoStream:
         resizedXY = (int(xy[0]*coef), int(xy[1]*coef))
         return resizedXY
 
-    def detectARUCO(self, frame, resizedFrame):
+    def detectARUCO(self, frame, rszFrame):
         # Detect ArUco.
         arucoDict = cv2.aruco.Dictionary_get(ARUCO_DICT[self._args.type])
         arucoParams = cv2.aruco.DetectorParameters_create()
@@ -97,18 +99,18 @@ class VideoStream:
                 vY = bottomRight[1] - bottomLeft[1]
 
                 # Draw the bounding box of the ArUCo detection.
-                cv2.line(resizedFrame, self.resizeDim(topLeft), self.resizeDim(topRight), (0, 255, 0), 2)
-                cv2.line(resizedFrame, self.resizeDim(topRight), self.resizeDim(bottomRight), (0, 255, 0), 2)
-                cv2.line(resizedFrame, self.resizeDim(bottomRight), self.resizeDim(bottomLeft), (0, 255, 0), 2)
-                cv2.line(resizedFrame, self.resizeDim(bottomLeft), self.resizeDim(topLeft), (0, 255, 0), 2)
+                cv2.line(rszFrame, self.resizeDim(topLeft), self.resizeDim(topRight), (0, 255, 0), 2)
+                cv2.line(rszFrame, self.resizeDim(topRight), self.resizeDim(bottomRight), (0, 255, 0), 2)
+                cv2.line(rszFrame, self.resizeDim(bottomRight), self.resizeDim(bottomLeft), (0, 255, 0), 2)
+                cv2.line(rszFrame, self.resizeDim(bottomLeft), self.resizeDim(topLeft), (0, 255, 0), 2)
 
                 # Draw the directions of the box of the ArUCo detection.
-                cv2.line(resizedFrame, self.resizeDim((cX, cY)), self.resizeDim((cX+uX, cY+uY)), (0, 0, 255), 2)
-                cv2.line(resizedFrame, self.resizeDim((cX, cY)), self.resizeDim((cX+vX, cY+vY)), (0, 0, 255), 2)
+                cv2.line(rszFrame, self.resizeDim((cX, cY)), self.resizeDim((cX+uX, cY+uY)), (0, 0, 255), 2)
+                cv2.line(rszFrame, self.resizeDim((cX, cY)), self.resizeDim((cX+vX, cY+vY)), (0, 0, 255), 2)
 
                 # Draw the center (x, y)-coordinates of the ArUco marker.
-                cv2.circle(resizedFrame, self.resizeDim((cX, cY)), 4, (255, 0, 0), -1)
-                cv2.putText(resizedFrame, str(markerID), self.resizeDim((cX*1.05, cY*1.05)),
+                cv2.circle(rszFrame, self.resizeDim((cX, cY)), 4, (255, 0, 0), -1)
+                cv2.putText(rszFrame, str(markerID), self.resizeDim((cX*1.05, cY*1.05)),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
                 # Publish data with ZMQ.
@@ -135,14 +137,28 @@ class TkApplication:
         self.window = window
         self.window.title(windowTitle)
 
+        # Get camera calibration parameters if any.
+        self.cpr = {}
+        if os.path.isfile('cameraCalibration.h5'):
+            fdh = h5py.File('cameraCalibration.h5', 'r')
+            self.cpr['mtx'] = fdh['mtx'][...]
+            self.cpr['dist'] = fdh['dist'][...]
+            fdh.close()
+
+        # Save args and socket.
+        self._args = args
+        self._socket = socket
+
         # Open video source (by default this will try to open the computer webcam).
         self.vid = VideoStream(args, socket)
 
         # Create several canvas that can fit the above video source size.
-        self.canvas1 = tkinter.Canvas(window, width=self.vid.resize[0], height=self.vid.resize[1])
-        self.canvas1.grid(row=0, column=0)
-        self.canvas2 = tkinter.Canvas(window, width=self.vid.resize[0], height=self.vid.resize[1])
-        self.canvas2.grid(row=0, column=1)
+        self.canvasRaw = tkinter.Canvas(window, width=self.vid.resize[0], height=self.vid.resize[1])
+        self.canvasRaw.grid(row=0, column=0)
+        self.photoRaw = None
+        self.canvasDst = tkinter.Canvas(window, width=self.vid.resize[0], height=self.vid.resize[1])
+        self.canvasDst.grid(row=0, column=1)
+        self.photoDst = None
 
         # After it is called once, the update method will be automatically called every delay milliseconds.
         self.delay = 1
@@ -153,15 +169,31 @@ class TkApplication:
 
     def update(self):
         # Get a frame from the video source.
-        ret, frame = self.vid.getFrame()
+        ret, rawFrame = self.vid.getFrame()
 
-        # Update canvas of the GUI.
+        # Get undistorted frame that has the same size and type as the original frame.
+        width, height = rawFrame.shape[:2]
+        alpha = 0 # Returns undistorted image with minimum unwanted pixels.
+        newCamMtx, roi = cv2.getOptimalNewCameraMatrix(self.cpr['mtx'], self.cpr['dist'],
+                                                       (width, height), alpha, (width, height))
+        dstFrame = cv2.undistort(rawFrame, self.cpr['mtx'], self.cpr['dist'], None, newCamMtx)
+
+        # Process image and update canvas of the GUI.
         if ret:
-            resizedFrame = cv2.resize(frame, self.vid.resize)
-            self.vid.detectARUCO(frame, resizedFrame)
-            self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(resizedFrame))
-            self.canvas1.create_image(0, 0, image=self.photo, anchor=tkinter.NW)
-            self.canvas2.create_image(0, 0, image=self.photo, anchor=tkinter.NW)
+            # Process image.
+            rszRawFrame = cv2.resize(rawFrame, self.vid.resize)
+            self.photoRaw = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(rszRawFrame))
+
+            # Update canvas of the GUI.
+            self.canvasRaw.create_image(0, 0, image=self.photoRaw, anchor=tkinter.NW)
+
+            # Process image.
+            rszDstFrame = cv2.resize(dstFrame, self.vid.resize)
+            self.vid.detectARUCO(dstFrame, rszDstFrame)
+            self.photoDst = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(rszDstFrame))
+
+            # Update canvas of the GUI.
+            self.canvasDst.create_image(0, 0, image=self.photoDst, anchor=tkinter.NW)
         self.window.after(self.delay, self.update)
 
 def autoDetectType(args):
