@@ -95,7 +95,7 @@ class VideoStream:
                 cX = int((topLeft[0] + bottomRight[0]) / 2.0)
                 cY = int((topLeft[1] + bottomRight[1]) / 2.0)
                 xX = topLeft[0] - bottomLeft[0]
-                uY = topLeft[1] - bottomLeft[1]
+                xY = topLeft[1] - bottomLeft[1]
                 vX = bottomRight[0] - bottomLeft[0]
                 vY = bottomRight[1] - bottomLeft[1]
 
@@ -106,7 +106,7 @@ class VideoStream:
                 cv2.line(rszFrame, self.resizeDim(bottomLeft), self.resizeDim(topLeft), (0, 255, 0), 2)
 
                 # Draw the directions of the box of the ArUCo detection.
-                cv2.line(rszFrame, self.resizeDim((cX, cY)), self.resizeDim((cX+xX, cY+uY)), (0, 0, 255), 2)
+                cv2.line(rszFrame, self.resizeDim((cX, cY)), self.resizeDim((cX+xX, cY+xY)), (0, 0, 255), 2)
                 cv2.line(rszFrame, self.resizeDim((cX, cY)), self.resizeDim((cX+vX, cY+vY)), (0, 0, 255), 2)
 
                 # Draw the center (x, y)-coordinates of the ArUco marker.
@@ -120,7 +120,7 @@ class VideoStream:
                 data.cX = cX
                 data.cY = cY
                 data.xX = xX
-                data.uY = uY
+                data.xY = xY
                 data.vX = vX
                 data.vY = vY
                 raw = data.SerializeToString()
