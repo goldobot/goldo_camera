@@ -34,7 +34,7 @@ def main():
         if data == 'q':
             break
         data.ParseFromString(raw)
-        print('  Detected ArUco marker: ID={}, c=({}, {}), u=({}, {}), v=({}, {})'.format(data.markerID, data.cX, data.cY, data.uX, data.uY, data.vX, data.vY))
+        print('  Detected ArUco marker: ID={}, c=({}, {}), u=({}, {}), v=({}, {})'.format(data.markerID, data.cX, data.cY, data.xX, data.uY, data.vX, data.vY))
 
 # Main program.
 if __name__ == '__main__':

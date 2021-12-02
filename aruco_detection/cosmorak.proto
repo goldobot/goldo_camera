@@ -4,7 +4,7 @@ message data {
     int32 markerID = 1;
     int32 cX = 2;
     int32 cY = 3;
-    int32 uX = 4;
+    int32 xX = 4;
     int32 uY = 5;
     int32 vX = 6;
     int32 vY = 7;
