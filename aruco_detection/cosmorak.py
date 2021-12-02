@@ -97,7 +97,7 @@ class VideoStream:
                 xX = topLeft[0] - bottomLeft[0]
                 xY = topLeft[1] - bottomLeft[1]
                 yX = bottomRight[0] - bottomLeft[0]
-                vY = bottomRight[1] - bottomLeft[1]
+                yY = bottomRight[1] - bottomLeft[1]
 
                 # Draw the bounding box of the ArUCo detection.
                 cv2.line(rszFrame, self.resizeDim(topLeft), self.resizeDim(topRight), (0, 255, 0), 2)
@@ -107,7 +107,7 @@ class VideoStream:
 
                 # Draw the directions of the box of the ArUCo detection.
                 cv2.line(rszFrame, self.resizeDim((cX, cY)), self.resizeDim((cX+xX, cY+xY)), (0, 0, 255), 2)
-                cv2.line(rszFrame, self.resizeDim((cX, cY)), self.resizeDim((cX+yX, cY+vY)), (0, 0, 255), 2)
+                cv2.line(rszFrame, self.resizeDim((cX, cY)), self.resizeDim((cX+yX, cY+yY)), (0, 0, 255), 2)
 
                 # Draw the center (x, y)-coordinates of the ArUco marker.
                 cv2.circle(rszFrame, self.resizeDim((cX, cY)), 4, (255, 0, 0), -1)
@@ -122,7 +122,7 @@ class VideoStream:
                 data.xX = xX
                 data.xY = xY
                 data.yX = yX
-                data.vY = vY
+                data.yY = yY
                 raw = data.SerializeToString()
                 self._socket.send(raw)
 

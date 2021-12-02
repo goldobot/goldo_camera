@@ -7,5 +7,5 @@ message data {
     int32 xX = 4;
     int32 xY = 5;
     int32 yX = 6;
-    int32 vY = 7;
+    int32 yY = 7;
 }
