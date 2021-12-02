@@ -9,6 +9,7 @@ import PIL.Image, PIL.ImageTk
 import os
 import h5py
 import numpy as np
+import kalman
 
 # ArUco types.
 ARUCO_DICT = {
@@ -37,7 +38,7 @@ ARUCO_DICT = {
 
 # Video stream.
 class VideoStream:
-    def __init__(self, args, socket):
+    def __init__(self, args, socket, delay):
         # Open the video source.
         self.vid = cv2.VideoCapture(args.video)
         if not self.vid.isOpened():
@@ -53,6 +54,10 @@ class VideoStream:
         # Save args and socket.
         self._args = args
         self._socket = socket
+
+        # Tracking with kalman filter.
+        self.kfr = {}
+        self._delay = delay
 
     def getFrame(self):
         if self.vid.isOpened():
@@ -114,6 +119,19 @@ class VideoStream:
                 cv2.putText(rszFrame, str(markerID), self.resizeDim((cX*1.05, cY*1.05)),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
+                # Tracking with kalman filter.
+                if markerID not in self.kfr:
+                    self.kfr[markerID] = kalman.KalmanFilter([cX, cY], deltaT=self._delay)
+                else:
+                    self.kfr[markerID].prediction()
+                vecZ = np.array([[cX], [cY]])
+                self.kfr[markerID].update(vecZ)
+
+                # Draw marker speed.
+                vX = int(self.kfr[markerID].vecS[2])
+                vY = int(self.kfr[markerID].vecS[3])
+                cv2.line(rszFrame, self.resizeDim((cX, cY)), self.resizeDim((cX+vX, cY+vY)), (255, 127, 0), 2)
+
                 # Publish data with ZMQ.
                 data = cosmorak_pb2.data()
                 data.markerID = markerID
@@ -123,6 +141,8 @@ class VideoStream:
                 data.xY = xY
                 data.yX = yX
                 data.yY = yY
+                data.vX = vX
+                data.vY = vY
                 raw = data.SerializeToString()
                 self._socket.send(raw)
 
@@ -151,7 +171,8 @@ class TkApplication:
         self._socket = socket
 
         # Open video source (by default this will try to open the computer webcam).
-        self.vid = VideoStream(args, socket)
+        self.delay = 1
+        self.vid = VideoStream(args, socket, self.delay)
 
         # Create several canvas that can fit the above video source size.
         lbl = tkinter.Label(window, text='raw')
@@ -172,7 +193,6 @@ class TkApplication:
         entAlp.grid(row=2, column=1)
 
         # After it is called once, the update method will be automatically called every delay milliseconds.
-        self.delay = 1
         self.update()
 
         # Tkinter mainloop.
