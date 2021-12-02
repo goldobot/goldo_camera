@@ -6,6 +6,6 @@ message data {
     int32 cY = 3;
     int32 xX = 4;
     int32 xY = 5;
-    int32 vX = 6;
+    int32 yX = 6;
     int32 vY = 7;
 }
