@@ -8,4 +8,6 @@ message data {
     int32 xY = 5;
     int32 yX = 6;
     int32 yY = 7;
+    int32 vX = 8;
+    int32 vY = 9;
 }
