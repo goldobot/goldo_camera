@@ -167,6 +167,9 @@ class TkApplication:
         self.roi = tkinter.IntVar(window)
         chkROI = tkinter.Checkbutton(window, text="ROI", variable=self.roi, onvalue=1, offvalue=0)
         chkROI.grid(row=2, column=0)
+        self.alpha = tkinter.StringVar(window, value='0')
+        entAlp = tkinter.Entry(window, text="alpha", textvariable=self.alpha)
+        entAlp.grid(row=2, column=1)
 
         # After it is called once, the update method will be automatically called every delay milliseconds.
         self.delay = 1
@@ -182,6 +185,10 @@ class TkApplication:
         # Get undistorted frame that has the same size and type as the original frame.
         width, height = rawFrame.shape[:2]
         alpha = 0 # Returns undistorted image with minimum unwanted pixels.
+        try: # Avoid crash when using GUI.
+            alpha = float(self.alpha.get())
+        except:
+            alpha = 0
         newCamMtx, roi = cv2.getOptimalNewCameraMatrix(self.cpr['mtx'], self.cpr['dist'],
                                                        (width, height), alpha, (width, height))
         dstFrame = cv2.undistort(rawFrame, self.cpr['mtx'], self.cpr['dist'], None, newCamMtx)
