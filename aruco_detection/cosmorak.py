@@ -153,11 +153,15 @@ class TkApplication:
         self.vid = VideoStream(args, socket)
 
         # Create several canvas that can fit the above video source size.
+        lbl = tkinter.Label(window, text='raw')
+        lbl.grid(row=0, column=0)
+        lbl = tkinter.Label(window, text='undistorted')
+        lbl.grid(row=0, column=1)
         self.canvasRaw = tkinter.Canvas(window, width=self.vid.resize[0], height=self.vid.resize[1])
-        self.canvasRaw.grid(row=0, column=0)
+        self.canvasRaw.grid(row=1, column=0)
         self.photoRaw = None
         self.canvasDst = tkinter.Canvas(window, width=self.vid.resize[0], height=self.vid.resize[1])
-        self.canvasDst.grid(row=0, column=1)
+        self.canvasDst.grid(row=1, column=1)
         self.photoDst = None
 
         # After it is called once, the update method will be automatically called every delay milliseconds.
