@@ -8,6 +8,7 @@ import tkinter
 import PIL.Image, PIL.ImageTk
 import os
 import h5py
+import numpy as np
 
 # ArUco types.
 ARUCO_DICT = {
@@ -163,6 +164,9 @@ class TkApplication:
         self.canvasDst = tkinter.Canvas(window, width=self.vid.resize[0], height=self.vid.resize[1])
         self.canvasDst.grid(row=1, column=1)
         self.photoDst = None
+        self.roi = tkinter.IntVar(window)
+        chkROI = tkinter.Checkbutton(window, text="ROI", variable=self.roi, onvalue=1, offvalue=0)
+        chkROI.grid(row=2, column=0)
 
         # After it is called once, the update method will be automatically called every delay milliseconds.
         self.delay = 1
@@ -181,6 +185,11 @@ class TkApplication:
         newCamMtx, roi = cv2.getOptimalNewCameraMatrix(self.cpr['mtx'], self.cpr['dist'],
                                                        (width, height), alpha, (width, height))
         dstFrame = cv2.undistort(rawFrame, self.cpr['mtx'], self.cpr['dist'], None, newCamMtx)
+        if self.roi.get():
+            x, y, width, height = roi
+            roiFrame = np.ones(dstFrame.shape, np.uint8) # Black image.
+            roiFrame[y:y+height, x:x+width] = dstFrame[y:y+height, x:x+width] # Add ROI.
+            dstFrame = roiFrame
 
         # Process image and update canvas of the GUI.
         if ret:
