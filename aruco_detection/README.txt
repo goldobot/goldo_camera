@@ -30,22 +30,9 @@ OpenCV - build from source:
 ~> sudo apt-get install libgoogle-glog-dev libgflags-dev
 ~> sudo apt-get install qt5-default
 ~> sudo apt-get install libeigen3-dev
-cosmorak@nanorak:~/Programs/opencv_contrib$ git diff
-diff --git a/modules/cudev/test/CMakeLists.txt b/modules/cudev/test/CMakeLists.txt
-index d036daf5..83e64906 100644
---- a/modules/cudev/test/CMakeLists.txt
-+++ b/modules/cudev/test/CMakeLists.txt
-@@ -23,8 +23,8 @@ if(OCV_DEPENDENCIES_FOUND)
-   endif()
-
-   CUDA_ADD_EXECUTABLE(${the_target} ${OPENCV_TEST_${the_module}_SOURCES} OPTIONS ${OPENCV_CUDA_OPTIONS_opencv_test_cudev})
--  ocv_target_link_libraries(${the_target} PRIVATE
--      ${test_deps} ${OPENCV_LINKER_LIBS} ${CUDA_LIBRARIES}
-+  ocv_target_link_libraries(${the_target} LINK_PRIVATE
-+      "${test_deps} ${OPENCV_LINKER_LIBS} ${CUDA_LIBRARIES}"
-   )
-   add_dependencies(opencv_tests ${the_target})
-cosmorak@nanorak:~/Programs/opencv/build$ cmake -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DWITH_CUDA=ON -DEIGEN_INCLUDE_PATH=/usr/include/eigen3 -DBUILD_opencv_python3=ON -DCMAKE_INSTALL_PREFIX:PATH=~/Programs/opencv/local ..
+cosmorak@nanorak:~/Programs/opencv_contrib$ git checkout 4.1.1
+cosmorak@nanorak:~/Programs/opencv$ git checkout 4.1.1
+cosmorak@nanorak:~/Programs/opencv/build$ cmake -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DWITH_CUDA=ON -DEIGEN_INCLUDE_PATH=/usr/include/eigen3 -DBUILD_opencv_python3=ON -DCMAKE_INSTALL_PREFIX:PATH=~/Programs/opencv/local -DOPENCV_GENERATE_PKGCONFIG=ON ..
 
 Utilisation:
 ------------
