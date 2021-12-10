@@ -1,8 +1,10 @@
 Installation:
 -------------
 
-~> pip3 install opencv-contrib-python zmq protobuf h5py Pillow
-~> sudo apt-get install protobuf-compiler python3-tk python3-pil.imagetk
+~> sudo apt-get install libblas-dev liblapack-dev libhdf5-dev protobuf-compiler python3-pip python3-tk python3-pil.imagetk
+~> pip3 install --upgrade pip
+~> pip3 install opencv-contrib-python zmq protobuf numpy Pillow Cython pkgconfig
+~> H5PY_SETUP_REQUIRES=0 pip3 install -U --no-build-isolation h5py
 
 Utilisation:
 ------------
