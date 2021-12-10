@@ -183,14 +183,15 @@ class TkApplication:
         self.canvasRaw.grid(row=1, column=0)
         self.photoRaw = None
         self.canvasDst = tkinter.Canvas(window, width=self.vid.resize[0], height=self.vid.resize[1])
-        self.canvasDst.grid(row=1, column=1)
+        self.canvasDst.grid(row=1, column=1, columnspan=2)
         self.photoDst = None
         self.roi = tkinter.IntVar(window)
         chkROI = tkinter.Checkbutton(window, text="ROI", variable=self.roi, onvalue=1, offvalue=0)
         chkROI.grid(row=2, column=0)
         self.alpha = tkinter.StringVar(window, value='0')
-        entAlp = tkinter.Entry(window, text="alpha", textvariable=self.alpha)
-        entAlp.grid(row=2, column=1)
+        tkinter.Label(text='alpha').grid(row=2, column=1)
+        entAlp = tkinter.Entry(window, textvariable=self.alpha)
+        entAlp.grid(row=2, column=2)
 
         # After it is called once, the update method will be automatically called every delay milliseconds.
         self.update()
