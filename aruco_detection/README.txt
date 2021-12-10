@@ -32,7 +32,7 @@ OpenCV - build from source:
 ~> sudo apt-get install libeigen3-dev
 cosmorak@nanorak:~/Programs/opencv_contrib$ git checkout 4.1.1
 cosmorak@nanorak:~/Programs/opencv$ git checkout 4.1.1
-cosmorak@nanorak:~/Programs/opencv/build$ cmake -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DWITH_CUDA=ON -DEIGEN_INCLUDE_PATH=/usr/include/eigen3 -DBUILD_opencv_python3=ON -DCMAKE_INSTALL_PREFIX:PATH=~/Programs/opencv/local -DOPENCV_GENERATE_PKGCONFIG=ON ..
+cosmorak@nanorak:~/Programs/opencv/build$ cmake -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DWITH_CUDA=ON -DEIGEN_INCLUDE_PATH=/usr/include/eigen3 -DBUILD_opencv_python3=ON -DCMAKE_INSTALL_PREFIX:PATH=~/Programs/opencv/local -DOPENCV_GENERATE_PKGCONFIG=ON -DBUILD_LIST=aruco,cudev ..
 
 Utilisation:
 ------------
