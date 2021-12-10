@@ -1,6 +1,7 @@
 Installation:
 -------------
 
+Packages - pre-compiled:
 ~> sudo apt-get install libblas-dev liblapack-dev libhdf5-dev protobuf-compiler python3-pip python3-tk python3-pil.imagetk
 ~> pip3 install --upgrade pip
 ~> pip3 install opencv-contrib-python zmq protobuf numpy Pillow Cython pkgconfig
