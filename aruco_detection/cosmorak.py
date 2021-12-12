@@ -157,6 +157,7 @@ class TkApplication:
         # Initialize window and title.
         self.window = window
         self.window.title(windowTitle)
+        print(windowTitle)
 
         # Get camera calibration parameters if any.
         self.cpr = {}
@@ -191,6 +192,9 @@ class TkApplication:
         self.alpha = tkinter.StringVar(window, value='0')
         tkinter.Label(text='alpha').grid(row=2, column=1)
         entAlp = tkinter.Entry(window, textvariable=self.alpha)
+        entAlp.bind('<Key-Return>', self.onAlphaChanged)
+        self._newCamMtx, self._roiCam = None, None
+        self.onAlphaChanged(None) # Initialize self._newCamMtx and self._roiCam.
         entAlp.grid(row=2, column=2)
 
         # After it is called once, the update method will be automatically called every delay milliseconds.
@@ -199,22 +203,27 @@ class TkApplication:
         # Tkinter mainloop.
         self.window.mainloop()
 
-    def update(self):
-        # Get a frame from the video source.
-        ret, rawFrame = self.vid.getFrame()
-
-        # Get undistorted frame that has the same size and type as the original frame.
-        width, height = rawFrame.shape[:2]
+    def onAlphaChanged(self, event):
+        # Callback triggered when alpha changed.
         alpha = 0 # Returns undistorted image with minimum unwanted pixels.
         try: # Avoid crash when using GUI.
             alpha = float(self.alpha.get())
         except:
             alpha = 0
-        newCamMtx, roi = cv2.getOptimalNewCameraMatrix(self.cpr['mtx'], self.cpr['dist'],
-                                                       (width, height), alpha, (width, height))
-        dstFrame = cv2.undistort(rawFrame, self.cpr['mtx'], self.cpr['dist'], None, newCamMtx)
+        print('  alpha changed:', alpha)
+        width, height = self.vid.resize[0], self.vid.resize[1]
+        self._newCamMtx, self._roiCam = cv2.getOptimalNewCameraMatrix(self.cpr['mtx'], self.cpr['dist'],
+                                                                      (width, height), alpha,
+                                                                      (width, height))
+
+    def update(self):
+        # Get a frame from the video source.
+        ret, rawFrame = self.vid.getFrame()
+
+        # Get undistorted frame that has the same size and type as the original frame.
+        dstFrame = cv2.undistort(rawFrame, self.cpr['mtx'], self.cpr['dist'], None, self._newCamMtx)
         if self.roi.get():
-            x, y, width, height = roi
+            x, y, width, height = self._roiCam
             roiFrame = np.ones(dstFrame.shape, np.uint8) # Black image.
             roiFrame[y:y+height, x:x+width] = dstFrame[y:y+height, x:x+width] # Add ROI.
             dstFrame = roiFrame
