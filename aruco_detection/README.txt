@@ -34,12 +34,12 @@ cosmorak@nanorak:~/Programs/opencv_contrib$ git checkout 4.1.1
 cosmorak@nanorak:~/Programs/opencv$ git checkout 4.1.1
 cosmorak@nanorak:~/Programs/opencv/build$ cmake -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DWITH_CUDA=ON -DEIGEN_INCLUDE_PATH=/usr/include/eigen3 -DBUILD_opencv_python3=ON -DCMAKE_INSTALL_PREFIX:PATH=~/Programs/opencv/local -DOPENCV_GENERATE_PKGCONFIG=ON -DBUILD_LIST=aruco,cudev ..
 
-Camera CSI MIPI (arducam): https://www.arducam.com/docs/arducam-obisp-mipi-camera-module/4-use-on-jetson-nano/
+Camera CSI MIPI (arducam): https://www.arducam.com/docs/camera-for-jetson-nano/native-jetson-cameras-imx219-imx477/imx477-how-to-install-the-driver
   Install driver:
     ~> cd /tmp
     ~> wget https://github.com/ArduCAM/MIPI_Camera/releases/download/v0.0.3/install_full.sh
     ~> chmod +x install_full.sh
-    ~> ./install_full.sh -m arducam
+    ~> ./install_full.sh -m imx477
        => reboot
   Test camera CSI MIPI:
     ~> cd /tmp
