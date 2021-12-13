@@ -30,9 +30,12 @@ OpenCV - build from source:
 ~> sudo apt-get install libgoogle-glog-dev libgflags-dev
 ~> sudo apt-get install qt5-default
 ~> sudo apt-get install libeigen3-dev
-cosmorak@nanorak:~/Programs/opencv_contrib$ git checkout 4.1.1
-cosmorak@nanorak:~/Programs/opencv$ git checkout 4.1.1
-cosmorak@nanorak:~/Programs/opencv/build$ cmake -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DWITH_CUDA=ON -DEIGEN_INCLUDE_PATH=/usr/include/eigen3 -DBUILD_opencv_python3=ON -DCMAKE_INSTALL_PREFIX:PATH=~/Programs/opencv/local -DOPENCV_GENERATE_PKGCONFIG=ON -DBUILD_LIST=aruco,cudev ..
+cosmorak@nanorak:~/Programs/opencv_contrib$ git checkout 4.5.4
+cosmorak@nanorak:~/Programs/opencv$ git checkout 4.5.4
+cosmorak@nanorak:~/Programs/opencv/build$ cmake -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DWITH_CUDA=ON -DEIGEN_INCLUDE_PATH=/usr/include/eigen3 -DBUILD_opencv_python3=ON -DCMAKE_INSTALL_PREFIX:PATH=~/Programs/opencv/local -DOPENCV_GENERATE_PKGCONFIG=ON -DBUILD_LIST=core,calib3d,viz,aruco,cudev ..
+cosmorak@nanorak:~/Programs/opencv/build$ make -j 2
+cosmorak@nanorak:~/Programs/opencv/build$ make install
+cosmorak@nanorak:~/Programs/opencv/build$ sudo ldconfig
 
 Camera CSI MIPI (arducam): https://www.arducam.com/docs/camera-for-jetson-nano/native-jetson-cameras-imx219-imx477/imx477-how-to-install-the-driver
   Install driver:
