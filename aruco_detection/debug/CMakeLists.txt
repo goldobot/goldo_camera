@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.10)
+project(ocvSimpleCapture)
+find_package(OpenCV REQUIRED)
+message("OpenCV_INCLUDE_DIRS ${OpenCV_INCLUDE_DIRS}")
+message("OpenCV_LIBS ${OpenCV_LIBS}")
+include_directories("${OpenCV_INCLUDE_DIRS}")
+add_executable(ocvSimpleCapture ocvSimpleCapture.cpp)
+target_link_libraries(ocvSimpleCapture "${OpenCV_LIBS}")
