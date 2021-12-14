@@ -1,16 +1,26 @@
 #include "opencv2/opencv.hpp"
+#include "opencv2/aruco.hpp"
 #include <iostream>
 #include <cstdlib>
 #include <chrono>
+#include <iomanip>
 
 using namespace std;
 using namespace cv;
 
+
 int main(int argc, char ** argv) {
+  // Cout width/precision.
+  cout.precision(3); cout.fill('0');
 
   // Create a VideoCapture object
   int vidID = argc == 2 ? atoi(argv[1]) : 0;
   VideoCapture cap(vidID);
+
+  // Aruco.
+  cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
+  std::vector<int> ids;
+  std::vector<std::vector<cv::Point2f> > corners;
 
   // Check if camera opened successfully
   if (!cap.isOpened()) {
@@ -34,8 +44,14 @@ int main(int argc, char ** argv) {
     stop = std::chrono::steady_clock::now();
     auto timeImshow = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
 
+    // Aruco.
+    start = std::chrono::steady_clock::now();
+    cv::aruco::detectMarkers(frame, dictionary, corners, ids);
+    stop = std::chrono::steady_clock::now();
+    auto timeAruco = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
+
     // Print timing.
-    cout << "timeFrame " << timeFrame/1000. << " s, timeImshow " << timeImshow/1000. << "s" << endl;
+    cout << "timeFrame " << setw(7) << timeFrame/1000. << " s, timeImshow " << setw(7) << timeImshow/1000. << "s, timeAruco " << setw(7) << timeAruco/1000. << " s" << endl;
 
     // Press ESC on keyboard to exit
     char c = (char) waitKey(25);
