@@ -2,3 +2,6 @@
 laptop (i7-3687U CPU @ 2.10GHz) | OpenCV apt-get | py  | timeFrame 000.082 s, timeImshow 000.001 s, timeAruco 000.014 s, FPS 10
 laptop (i7-3687U CPU @ 2.10GHz) | OpenCV apt-get | c++ | timeFrame 000.057 s, timeImshow 000.000 s, timeAruco 000.015 s, FPS 10
 -------------------------------------------------------------------------------------------------------------------------------
+nano (ARMv8)           |  ssh   | OpenCV apt-get | py  | timeFrame 000.001 s, timeImshow 000.000 s, timeAruco 000.006 s, FPS 1
+nano (ARMv8)           |  ssh   | OpenCV build   | c++ | timeFrame 000.001 s, timeImshow 000.000 s, timeAruco 000.019 s, FPS 0
+-------------------------------------------------------------------------------------------------------------------------------
