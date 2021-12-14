@@ -212,7 +212,7 @@ class TkApplication:
             alpha = float(self.alpha.get())
         except:
             alpha = 0
-        print('  alpha changed:', alpha)
+        print('  Alpha changed:', alpha)
         width, height = self.vid.resize[0], self.vid.resize[1]
         self._newCamMtx, self._roiCam = cv2.getOptimalNewCameraMatrix(self.cpr['mtx'], self.cpr['dist'],
                                                                       (width, height), alpha,
