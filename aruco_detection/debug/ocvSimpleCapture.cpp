@@ -22,6 +22,10 @@ int main(int argc, char ** argv) {
   std::vector<int> ids;
   std::vector<std::vector<cv::Point2f> > corners;
 
+  // FPS.
+  std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+  unsigned int nbFrames = 0;
+
   // Check if camera opened successfully
   if (!cap.isOpened()) {
     cout << "Error opening video stream or file" << endl;
@@ -34,6 +38,7 @@ int main(int argc, char ** argv) {
     Mat frame; cap >> frame;
     std::chrono::steady_clock::time_point stop = std::chrono::steady_clock::now();
     auto timeFrame = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
+    nbFrames += 1;
 
     // If the frame is empty, break immediately
     if (frame.empty()) break;
@@ -50,8 +55,14 @@ int main(int argc, char ** argv) {
     stop = std::chrono::steady_clock::now();
     auto timeAruco = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
 
+    // FPS.
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    auto timeFPS = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+    unsigned int FPS = (unsigned int) (nbFrames/(timeFPS/1000.));
+
     // Print timing.
-    cout << "timeFrame " << setw(7) << timeFrame/1000. << " s, timeImshow " << setw(7) << timeImshow/1000. << "s, timeAruco " << setw(7) << timeAruco/1000. << " s" << endl;
+    cout << "timeFrame " << setw(7) << timeFrame/1000. << " s, timeImshow " << setw(7) << timeImshow/1000.;
+    cout << "s, timeAruco " << setw(7) << timeAruco/1000. << " s, FPS " << FPS << endl;
 
     // Press ESC on keyboard to exit
     char c = (char) waitKey(25);

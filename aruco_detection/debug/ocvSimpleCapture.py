@@ -11,12 +11,17 @@ vid = cv2.VideoCapture(vidID)
 arucoParams = cv2.aruco.DetectorParameters_create()
 arucoDict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)
 
+# FPS.
+begin = time.time()
+nbFrames = 0
+
 while(True):
     # Capture the video frame by frame
     start = time.time()
     ret, frame = vid.read()
     stop = time.time()
     timeFrame = stop - start
+    nbFrames += 1
 
     # Display the resulting frame
     start = time.time()
@@ -30,8 +35,11 @@ while(True):
     stop = time.time()
     timeAruco = stop - start
 
+    # FPS
+    FPS = int(nbFrames/(time.time() - begin))
+
     # Print timing.
-    print('timeFrame %07.3f s, timeImshow %07.3f s, timeAruco %07.3f s'%(timeFrame, timeImshow, timeAruco), flush=True)
+    print('timeFrame %07.3f s, timeImshow %07.3f s, timeAruco %07.3f s, FPS %d'%(timeFrame, timeImshow, timeAruco, FPS), flush=True)
 
     # Press 'q' to quit
     if cv2.waitKey(1) & 0xFF == ord('q'):
