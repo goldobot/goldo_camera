@@ -31,7 +31,7 @@ while(True):
     timeAruco = stop - start
 
     # Print timing.
-    print('timeFrame %07.3f s, timeImshow %07.3f s, timeAruco %07.3f s'%(timeFrame, timeImshow, timeAruco))
+    print('timeFrame %07.3f s, timeImshow %07.3f s, timeAruco %07.3f s'%(timeFrame, timeImshow, timeAruco), flush=True)
 
     # Press 'q' to quit
     if cv2.waitKey(1) & 0xFF == ord('q'):
