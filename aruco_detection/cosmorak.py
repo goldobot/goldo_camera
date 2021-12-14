@@ -35,6 +35,7 @@ ARUCO_DICT = {
     'DICT_APRILTAG_36h10': cv2.aruco.DICT_APRILTAG_36h10,
     'DICT_APRILTAG_36h11': cv2.aruco.DICT_APRILTAG_36h11
 }
+arucoParams = cv2.aruco.DetectorParameters_create()
 
 # Video stream.
 class VideoStream:
@@ -78,7 +79,6 @@ class VideoStream:
     def detectARUCO(self, frame, rszFrame):
         # Detect ArUco.
         arucoDict = cv2.aruco.Dictionary_get(ARUCO_DICT[self._args.type])
-        arucoParams = cv2.aruco.DetectorParameters_create()
         (corners, ids, rejected) = cv2.aruco.detectMarkers(frame, arucoDict,
                                                            parameters=arucoParams)
 
@@ -259,7 +259,6 @@ def autoDetectType(args):
         _, frame = vid.read()
         for (arucoName, arucoDict) in ARUCO_DICT.items():
             arucoDict = cv2.aruco.Dictionary_get(arucoDict)
-            arucoParams = cv2.aruco.DetectorParameters_create()
             (corners, ids, rejected) = cv2.aruco.detectMarkers(frame, arucoDict,
                                                                parameters=arucoParams)
             if len(corners) > 0:
