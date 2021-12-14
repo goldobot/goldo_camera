@@ -134,7 +134,7 @@ class VideoStream:
 
                 # Publish data with ZMQ.
                 data = cosmorak_pb2.data()
-                data.markerID = markerID
+                data.markerID = int(markerID)
                 data.cX = cX
                 data.cY = cY
                 data.xX = xX
