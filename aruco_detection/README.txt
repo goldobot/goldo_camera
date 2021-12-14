@@ -17,6 +17,7 @@ OpenCV - build from source:
 ~> sudo apt-get install python3-dev python3-numpy python3-pip
 ~> sudo apt-get install libxvidcore-dev libx264-dev libgtk-3-dev
 ~> sudo apt-get install libtbb2 libtbb-dev libdc1394-22-dev libxine2-dev
+~> sudo apt-get install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 ~> sudo apt-get install gstreamer1.0-tools libgstreamer-plugins-base1.0-dev
 ~> sudo apt-get install libgstreamer-plugins-good1.0-dev
 ~> sudo apt-get install libv4l-dev v4l-utils v4l2ucp qv4l2
@@ -32,7 +33,7 @@ OpenCV - build from source:
 ~> sudo apt-get install libeigen3-dev
 cosmorak@nanorak:~/Programs/opencv_contrib$ git checkout 4.5.4
 cosmorak@nanorak:~/Programs/opencv$ git checkout 4.5.4
-cosmorak@nanorak:~/Programs/opencv/build$ cmake -DCMAKE_BUILD_TYPE=Release -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DWITH_CUDA=ON -DEIGEN_INCLUDE_PATH=/usr/include/eigen3 -DBUILD_opencv_python3=ON -DCMAKE_INSTALL_PREFIX:PATH=~/Programs/opencv/local -DOPENCV_GENERATE_PKGCONFIG=ON -DBUILD_LIST=core,calib3d,viz,videoio,highgui,aruco,cudev ..
+cosmorak@nanorak:~/Programs/opencv/build$ cmake -DCMAKE_BUILD_TYPE=Release -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -DWITH_CUDA=ON -DEIGEN_INCLUDE_PATH=/usr/include/eigen3 -DBUILD_opencv_python3=ON -DCMAKE_INSTALL_PREFIX:PATH=~/Programs/opencv/local -DOPENCV_GENERATE_PKGCONFIG=ON -DWITH_GSTREAMER=ON -DBUILD_LIST=core,calib3d,viz,videoio,highgui,aruco,cudev ..
 cosmorak@nanorak:~/Programs/opencv/build$ make -j 2
 cosmorak@nanorak:~/Programs/opencv/build$ make install
 cosmorak@nanorak:~/Programs/opencv/build$ sudo ldconfig
