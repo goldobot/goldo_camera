@@ -19,6 +19,8 @@ while(True):
     # Capture the video frame by frame
     start = time.time()
     ret, frame = vid.read()
+    if not ret:
+        continue
     stop = time.time()
     timeFrame = stop - start
     nbFrames += 1

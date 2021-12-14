@@ -36,6 +36,7 @@ int main(int argc, char ** argv) {
     // Capture frame-by-frame
     std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
     Mat frame; cap >> frame;
+    if (frame.empty()) continue;
     std::chrono::steady_clock::time_point stop = std::chrono::steady_clock::now();
     auto timeFrame = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
     nbFrames += 1;
