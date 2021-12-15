@@ -68,6 +68,16 @@ libargus: https://developer.ridgerun.com/wiki/index.php?title=Xavier/Video_Captu
   ~> cmake ..
   ~> make
 
+Test Gstreamer:
+  ~> v4l2-ctl --list-devices
+     vi-output, imx477 6-001a (platform:54080000.vi:0):
+	/dev/video0
+     USB 2.0 Camera (usb-70090000.xusb-2.3):
+	/dev/video1
+  ~> gst-launch-1.0 nvarguscamerasrc sensor-id=0 ! "video/x-raw(memory:NVMM)" ! nvvidconv ! nvoverlaysink
+  ~> gst-launch-1.0 -v v4l2src device=/dev/video1 ! 'image/jpeg, format=MJPG' ! jpegdec ! xvimagesink
+
+
 Utilisation:
 ------------
 
