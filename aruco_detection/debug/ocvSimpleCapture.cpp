@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <chrono>
 #include <iomanip>
+#include <fstream>
 
 using namespace std;
 using namespace cv;
@@ -13,9 +14,27 @@ int main(int argc, char ** argv) {
   // Cout width/precision.
   cout.precision(3); cout.fill('0');
 
-  // Create a VideoCapture object
+  // Command line options.
   int vidID = argc == 2 ? atoi(argv[1]) : 0;
-  VideoCapture cap(vidID);
+  bool CSI = (argc == 3 && string(argv[2]) == "CSI") ? true : false;
+
+  // Create a VideoCapture object
+  VideoCapture cap;
+  if (!CSI) { // USB
+    cap.open(vidID, cv::CAP_ANY);
+  }
+  else {
+    stringstream sstr;
+    sstr << "nvarguscamerasrc sensor-id=" << vidID << " ! ";
+    sstr << "video/x-raw(memory:NVMM), ";
+    sstr << "width=(int)640, height=(int)340, ";
+    sstr << "format=(string)NV12, framerate=(fraction)15/1 ! ";
+    sstr << "nvvidconv flip-method=0 ! ";
+    sstr << "video/x-raw, width=(int)640, height=(int)360, format=(string)BGRx ! ";
+    sstr << "videoconvert ! ";
+    sstr << "video/x-raw, format=(string)BGR ! appsink";
+    cap.open(sstr.str(), cv::CAP_GSTREAMER);
+  };
 
   // Aruco.
   cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);

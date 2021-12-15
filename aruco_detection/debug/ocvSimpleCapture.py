@@ -3,9 +3,28 @@ import cv2
 import sys
 import time
 
-# Define a video capture object
+def gstreamerPipeline(capture_width=640, capture_height=360, display_width=640, display_height=360, framerate=15, flip_method=0) :
+    return ('nvarguscamerasrc sensor-id=%%d ! '
+    'video/x-raw(memory:NVMM), '
+    'width=(int)%d, height=(int)%d, '
+    'format=(string)NV12, framerate=(fraction)%d/1 ! '
+    'nvvidconv flip-method=%d ! '
+    'video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! '
+    'videoconvert ! '
+    'video/x-raw, format=(string)BGR ! appsink'  % (capture_width,capture_height,framerate,flip_method,display_width,display_height))
+
+# Command line options.
 vidID = int(sys.argv[1]) if len(sys.argv) == 2 else 0
-vid = cv2.VideoCapture(vidID)
+CSI = True if len(sys.argv) == 3 and sys.argv[2] == 'CSI' else False
+print('vidID', vidID, 'CSI', CSI)
+
+# Define a video capture object
+vid = None
+if not CSI: # USB
+    vid = cv2.VideoCapture(vidID)
+else:
+    cmd = gstreamerPipeline()
+    vid = cv2.VideoCapture(cmd%vidID, cv2.CAP_GSTREAMER)
 
 # Aruco.
 arucoParams = cv2.aruco.DetectorParameters_create()
