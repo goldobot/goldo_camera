@@ -167,8 +167,7 @@ class TkApplication:
             self.cpr['mtx'] = fdh['mtx'][...]
             self.cpr['dist'] = fdh['dist'][...]
             fdh.close()
-        else:
-            assert True, 'the camera must be calibrated with cameraCalibration.py'
+        assert len(self.cpr.keys()) > 0, 'the camera must be calibrated with cameraCalibration.py'
 
         # Save args and socket.
         self._args = args
