@@ -71,9 +71,9 @@ libargus: https://developer.ridgerun.com/wiki/index.php?title=Xavier/Video_Captu
 Test Gstreamer:
   ~> v4l2-ctl --list-devices
      vi-output, imx477 6-001a (platform:54080000.vi:0):
-	/dev/video0
+       /dev/video0
      USB 2.0 Camera (usb-70090000.xusb-2.3):
-	/dev/video1
+       /dev/video1
   ~> gst-launch-1.0 nvarguscamerasrc sensor-id=0 ! "video/x-raw(memory:NVMM)" ! nvvidconv ! nvoverlaysink
   ~> gst-launch-1.0 -v v4l2src device=/dev/video1 ! 'image/jpeg, format=MJPG' ! jpegdec ! xvimagesink
 
@@ -87,7 +87,7 @@ Charger la version compilée d'OpenCV:
 >> module load opencv
 
 Pour calibrer la camera:
->> python3 cameraCalibration.py --video X
+>> python3 cameraCalibration.py --videoID X
    => paramètres de la caméra stockés dans le fichier cameraCalibration.h5
 
 Pour protobuf:
@@ -95,7 +95,7 @@ Pour protobuf:
    => génération cosmorak_pb2.py (pour protobuf)
 
 Dans un terminal, lancer le publisher zmq:
->> python3 cosmorak.py --video X
+>> python3 cosmorak.py --videoID X
    => paramètres de la caméra lus dans le fichier cameraCalibration.h5
    => les données issue du traitement image sont envoyées via zmq/protobuf.
 
