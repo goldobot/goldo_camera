@@ -83,6 +83,9 @@ Utilisation:
 
 brancher la camera: camera <=> /dev/videoX
 
+Charger la version compilée d'OpenCV:
+>> module load opencv
+
 Pour calibrer la camera:
 >> python3 cameraCalibration.py --video X
    => paramètres de la caméra stockés dans le fichier cameraCalibration.h5
