@@ -161,8 +161,9 @@ class TkApplication:
 
         # Get camera calibration parameters if any.
         self.cpr = {}
-        if os.path.isfile('cameraCalibration.h5'):
-            fdh = h5py.File('cameraCalibration%s.h5'%args.videoName, 'r')
+        fname = 'cameraCalibration%s.h5'%args.videoName
+        if os.path.isfile(fname):
+            fdh = h5py.File(fname, 'r')
             self.cpr['mtx'] = fdh['mtx'][...]
             self.cpr['dist'] = fdh['dist'][...]
             fdh.close()
