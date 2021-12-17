@@ -41,7 +41,7 @@ arucoParams = cv2.aruco.DetectorParameters_create()
 class VideoStream:
     def __init__(self, args, socket, delay):
         # Open the video source.
-        self.vid = cv2.VideoCapture(args.video)
+        self.vid = createVideoCapture(args)
         if not self.vid.isOpened():
             raise ValueError("Unable to open video source", args.video)
 
@@ -78,7 +78,7 @@ class VideoStream:
 
     def detectARUCO(self, frame, rszFrame):
         # Detect ArUco.
-        arucoDict = cv2.aruco.Dictionary_get(ARUCO_DICT[self._args.type])
+        arucoDict = cv2.aruco.Dictionary_get(ARUCO_DICT[self._args.arucoName])
         (corners, ids, rejected) = cv2.aruco.detectMarkers(frame, arucoDict,
                                                            parameters=arucoParams)
 
@@ -162,7 +162,7 @@ class TkApplication:
         # Get camera calibration parameters if any.
         self.cpr = {}
         if os.path.isfile('cameraCalibration.h5'):
-            fdh = h5py.File('cameraCalibration.h5', 'r')
+            fdh = h5py.File('cameraCalibration%s.h5'%args.videoName, 'r')
             self.cpr['mtx'] = fdh['mtx'][...]
             self.cpr['dist'] = fdh['dist'][...]
             fdh.close()
@@ -248,13 +248,34 @@ class TkApplication:
             self.canvasDst.create_image(0, 0, image=self.photoDst, anchor=tkinter.NW)
         self.window.after(self.delay, self.update)
 
+def gstreamerPipeline(capture_width=640, capture_height=360, display_width=640, display_height=360, framerate=15, flip_method=0) :
+    return ('nvarguscamerasrc sensor-id=%%d ! '
+    'video/x-raw(memory:NVMM), '
+    'width=(int)%d, height=(int)%d, '
+    'format=(string)NV12, framerate=(fraction)%d/1 ! '
+    'nvvidconv flip-method=%d ! '
+    'video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! '
+    'videoconvert ! '
+    'video/x-raw, format=(string)BGR ! appsink'  % (capture_width,capture_height,framerate,flip_method,display_width,display_height))
+
+def createVideoCapture(args):
+    # Get a video capture stream.
+    vid = None
+    if args.videoType == 'USB':
+        vid = cv2.VideoCapture(args.videoID)
+    else:
+        cmd = gstreamerPipeline()
+        vid = cv2.VideoCapture(cmd%args.videoID, cv2.CAP_GSTREAMER)
+    assert vid is not None, 'create video capture KO'
+    return vid
+
 def autoDetectType(args):
     # Auto-detection of type if type is unknown.
     print('Auto-detecting types...')
     vid = None
-    while args.type == '': # Unknown type.
+    while args.arucoName == '': # Unknown type.
         if vid is None:
-            vid = cv2.VideoCapture(args.video)
+            vid = createVideoCapture(args)
         # Check for all possible types.
         _, frame = vid.read()
         for (arucoName, arucoDict) in ARUCO_DICT.items():
@@ -263,7 +284,7 @@ def autoDetectType(args):
                                                                parameters=arucoParams)
             if len(corners) > 0:
                 print("  Auto-detected type: found {} '{}' markers".format(len(corners), arucoName))
-                args.type = arucoName
+                args.arucoName = arucoName
         cv2.imshow('Auto-detecting types...', frame)
         cv2.waitKey(1)
     if vid:
@@ -273,8 +294,10 @@ def autoDetectType(args):
 def cmdLineArgs():
     # Create parser.
     parser = argparse.ArgumentParser(description='Publisher parser.')
-    parser.add_argument('--video', type=int, required=True)
-    parser.add_argument('--type', type=str, default='')
+    parser.add_argument('--videoID', type=int, required=True)
+    parser.add_argument('--videoType', type=str, default='USB')
+    parser.add_argument('--videoName', type=str, default='USB')
+    parser.add_argument('--arucoName', type=str, default='')
     parser.add_argument('--host', type=str, default='127.0.0.1')
     parser.add_argument('--port', type=int, default=2000)
     parser.add_argument('--scalePercent', type=int, default=60)
@@ -288,8 +311,8 @@ def cmdLineArgs():
 def main():
     # Get command line arguments.
     args = cmdLineArgs()
-    if args.type not in ARUCO_DICT:
-        sys.exit('Error: type %s not in %s' % (args.type, ARUCO_DICT.keys()))
+    if args.arucoName not in ARUCO_DICT:
+        sys.exit('Error: type %s not in %s' % (args.arucoName, ARUCO_DICT.keys()))
 
     # Bind ZMQ socket.
     context = zmq.Context()
