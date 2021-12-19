@@ -86,20 +86,34 @@ brancher la camera: camera <=> /dev/videoX
 Charger la version compilée d'OpenCV:
 >> module load opencv
 
-Pour calibrer la camera:
->> python3 cameraCalibration.py --videoID X
-   => paramètres de la caméra stockés dans le fichier cameraCalibration.h5
-
 Pour protobuf:
 >> protoc -I=. --python_out=. ./cosmorak.proto
    => génération cosmorak_pb2.py (pour protobuf)
 
-Dans un terminal, lancer le publisher zmq:
->> python3 cosmorak.py --videoID X
-   => paramètres de la caméra lus dans le fichier cameraCalibration.h5
-   => les données issue du traitement image sont envoyées via zmq/protobuf.
-
-Dans un autre terminal, lancer le subscriber zmq:
+Dans un terminal, lancer le subscriber zmq:
 >> python3 robot.py 
    => les données issue du traitement image sont reçues via zmq/protobuf.
 
+USB:
+====
+
+  Pour calibrer la camera:
+  >> python3 cameraCalibration.py --videoID X
+     => paramètres de la caméra stockés dans le fichier cameraCalibrationUSB.h5
+
+  Dans un autre terminal, lancer le publisher zmq:
+  >> python3 cosmorak.py --videoID X
+     => paramètres de la caméra lus dans le fichier cameraCalibrationUSB.h5
+     => les données issue du traitement image sont envoyées via zmq/protobuf.
+
+CSI:
+====
+
+  Pour calibrer la camera:
+  >> python3 cameraCalibration.py --videoID X --videoType CSI --videoName CSI
+     => paramètres de la caméra stockés dans le fichier cameraCalibrationCSI.h5
+
+  Dans un autre terminal, lancer le publisher zmq:
+  >> python3 cosmorak.py --videoID X --videoType CSI --videoName CSI
+     => paramètres de la caméra lus dans le fichier cameraCalibrationCSI.h5
+     => les données issue du traitement image sont envoyées via zmq/protobuf.
