@@ -35,12 +35,13 @@ ARUCO_DICT = {
     'DICT_APRILTAG_36h10': cv2.aruco.DICT_APRILTAG_36h10,
     'DICT_APRILTAG_36h11': cv2.aruco.DICT_APRILTAG_36h11
 }
+arucoParams = cv2.aruco.DetectorParameters_create()
 
 # Video stream.
 class VideoStream:
     def __init__(self, args, socket, delay):
         # Open the video source.
-        self.vid = cv2.VideoCapture(args.video)
+        self.vid = createVideoCapture(args)
         if not self.vid.isOpened():
             raise ValueError("Unable to open video source", args.video)
 
@@ -77,8 +78,7 @@ class VideoStream:
 
     def detectARUCO(self, frame, rszFrame):
         # Detect ArUco.
-        arucoDict = cv2.aruco.Dictionary_get(ARUCO_DICT[self._args.type])
-        arucoParams = cv2.aruco.DetectorParameters_create()
+        arucoDict = cv2.aruco.Dictionary_get(ARUCO_DICT[self._args.arucoName])
         (corners, ids, rejected) = cv2.aruco.detectMarkers(frame, arucoDict,
                                                            parameters=arucoParams)
 
@@ -134,7 +134,7 @@ class VideoStream:
 
                 # Publish data with ZMQ.
                 data = cosmorak_pb2.data()
-                data.markerID = markerID
+                data.markerID = int(markerID)
                 data.cX = cX
                 data.cY = cY
                 data.xX = xX
@@ -157,14 +157,17 @@ class TkApplication:
         # Initialize window and title.
         self.window = window
         self.window.title(windowTitle)
+        print(windowTitle)
 
         # Get camera calibration parameters if any.
         self.cpr = {}
-        if os.path.isfile('cameraCalibration.h5'):
-            fdh = h5py.File('cameraCalibration.h5', 'r')
+        fname = 'cameraCalibration%s.h5'%args.videoName
+        if os.path.isfile(fname):
+            fdh = h5py.File(fname, 'r')
             self.cpr['mtx'] = fdh['mtx'][...]
             self.cpr['dist'] = fdh['dist'][...]
             fdh.close()
+        assert len(self.cpr.keys()) > 0, 'the camera must be calibrated with cameraCalibration.py'
 
         # Save args and socket.
         self._args = args
@@ -183,14 +186,18 @@ class TkApplication:
         self.canvasRaw.grid(row=1, column=0)
         self.photoRaw = None
         self.canvasDst = tkinter.Canvas(window, width=self.vid.resize[0], height=self.vid.resize[1])
-        self.canvasDst.grid(row=1, column=1)
+        self.canvasDst.grid(row=1, column=1, columnspan=2)
         self.photoDst = None
         self.roi = tkinter.IntVar(window)
         chkROI = tkinter.Checkbutton(window, text="ROI", variable=self.roi, onvalue=1, offvalue=0)
         chkROI.grid(row=2, column=0)
         self.alpha = tkinter.StringVar(window, value='0')
-        entAlp = tkinter.Entry(window, text="alpha", textvariable=self.alpha)
-        entAlp.grid(row=2, column=1)
+        tkinter.Label(text='alpha').grid(row=2, column=1)
+        entAlp = tkinter.Entry(window, textvariable=self.alpha)
+        entAlp.bind('<Key-Return>', self.onAlphaChanged)
+        self._newCamMtx, self._roiCam = None, None
+        self.onAlphaChanged(None) # Initialize self._newCamMtx and self._roiCam.
+        entAlp.grid(row=2, column=2)
 
         # After it is called once, the update method will be automatically called every delay milliseconds.
         self.update()
@@ -198,22 +205,27 @@ class TkApplication:
         # Tkinter mainloop.
         self.window.mainloop()
 
-    def update(self):
-        # Get a frame from the video source.
-        ret, rawFrame = self.vid.getFrame()
-
-        # Get undistorted frame that has the same size and type as the original frame.
-        width, height = rawFrame.shape[:2]
+    def onAlphaChanged(self, event):
+        # Callback triggered when alpha changed.
         alpha = 0 # Returns undistorted image with minimum unwanted pixels.
         try: # Avoid crash when using GUI.
             alpha = float(self.alpha.get())
         except:
             alpha = 0
-        newCamMtx, roi = cv2.getOptimalNewCameraMatrix(self.cpr['mtx'], self.cpr['dist'],
-                                                       (width, height), alpha, (width, height))
-        dstFrame = cv2.undistort(rawFrame, self.cpr['mtx'], self.cpr['dist'], None, newCamMtx)
+        print('  Alpha changed:', alpha)
+        width, height = self.vid.resize[0], self.vid.resize[1]
+        self._newCamMtx, self._roiCam = cv2.getOptimalNewCameraMatrix(self.cpr['mtx'], self.cpr['dist'],
+                                                                      (width, height), alpha,
+                                                                      (width, height))
+
+    def update(self):
+        # Get a frame from the video source.
+        ret, rawFrame = self.vid.getFrame()
+
+        # Get undistorted frame that has the same size and type as the original frame.
+        dstFrame = cv2.undistort(rawFrame, self.cpr['mtx'], self.cpr['dist'], None, self._newCamMtx)
         if self.roi.get():
-            x, y, width, height = roi
+            x, y, width, height = self._roiCam
             roiFrame = np.ones(dstFrame.shape, np.uint8) # Black image.
             roiFrame[y:y+height, x:x+width] = dstFrame[y:y+height, x:x+width] # Add ROI.
             dstFrame = roiFrame
@@ -236,23 +248,43 @@ class TkApplication:
             self.canvasDst.create_image(0, 0, image=self.photoDst, anchor=tkinter.NW)
         self.window.after(self.delay, self.update)
 
+def gstreamerPipeline(capture_width=640, capture_height=360, display_width=640, display_height=360, framerate=15, flip_method=0) :
+    return ('nvarguscamerasrc sensor-id=%%d ! '
+    'video/x-raw(memory:NVMM), '
+    'width=(int)%d, height=(int)%d, '
+    'format=(string)NV12, framerate=(fraction)%d/1 ! '
+    'nvvidconv flip-method=%d ! '
+    'video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! '
+    'videoconvert ! '
+    'video/x-raw, format=(string)BGR ! appsink'  % (capture_width,capture_height,framerate,flip_method,display_width,display_height))
+
+def createVideoCapture(args):
+    # Get a video capture stream.
+    vid = None
+    if args.videoType == 'USB':
+        vid = cv2.VideoCapture(args.videoID)
+    else:
+        cmd = gstreamerPipeline()
+        vid = cv2.VideoCapture(cmd%args.videoID, cv2.CAP_GSTREAMER)
+    assert vid is not None, 'create video capture KO'
+    return vid
+
 def autoDetectType(args):
     # Auto-detection of type if type is unknown.
     print('Auto-detecting types...')
     vid = None
-    while args.type == '': # Unknown type.
+    while args.arucoName == '': # Unknown type.
         if vid is None:
-            vid = cv2.VideoCapture(args.video)
+            vid = createVideoCapture(args)
         # Check for all possible types.
         _, frame = vid.read()
         for (arucoName, arucoDict) in ARUCO_DICT.items():
             arucoDict = cv2.aruco.Dictionary_get(arucoDict)
-            arucoParams = cv2.aruco.DetectorParameters_create()
             (corners, ids, rejected) = cv2.aruco.detectMarkers(frame, arucoDict,
                                                                parameters=arucoParams)
             if len(corners) > 0:
                 print("  Auto-detected type: found {} '{}' markers".format(len(corners), arucoName))
-                args.type = arucoName
+                args.arucoName = arucoName
         cv2.imshow('Auto-detecting types...', frame)
         cv2.waitKey(1)
     if vid:
@@ -262,8 +294,10 @@ def autoDetectType(args):
 def cmdLineArgs():
     # Create parser.
     parser = argparse.ArgumentParser(description='Publisher parser.')
-    parser.add_argument('--video', type=int, required=True)
-    parser.add_argument('--type', type=str, default='')
+    parser.add_argument('--videoID', type=int, required=True)
+    parser.add_argument('--videoType', type=str, default='USB')
+    parser.add_argument('--videoName', type=str, default='USB')
+    parser.add_argument('--arucoName', type=str, default='')
     parser.add_argument('--host', type=str, default='127.0.0.1')
     parser.add_argument('--port', type=int, default=2000)
     parser.add_argument('--scalePercent', type=int, default=60)
@@ -277,8 +311,8 @@ def cmdLineArgs():
 def main():
     # Get command line arguments.
     args = cmdLineArgs()
-    if args.type not in ARUCO_DICT:
-        sys.exit('Error: type %s not in %s' % (args.type, ARUCO_DICT.keys()))
+    if args.arucoName not in ARUCO_DICT:
+        sys.exit('Error: type %s not in %s' % (args.arucoName, ARUCO_DICT.keys()))
 
     # Bind ZMQ socket.
     context = zmq.Context()
