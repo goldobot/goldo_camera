@@ -1,8 +1,8 @@
 Installation:
 -------------
 
-Fix problème de portage x86 vs ARM:
-  ~> tail .bashrc
+Fix probleme de portage x86 vs ARM:
+  ~> tail ~/.bashrc
      export OPENBLAS_CORETYPE=ARMV8
 
 Packages - pre-compiled:
@@ -13,6 +13,17 @@ Packages - pre-compiled:
 
 Install environment-module:
   ~> sudo apt-get install -y environment-modules tcl-dev
+  ~> tail ~/.bashrc
+     # Modules environment
+     export MODULEPATH="/home/cosmorak/Modules"
+     module() { eval `/usr/lib/modulecmd.tcl bash $*`; }
+  ~> more /home/cosmorak/Modules/opencv
+     #%Module1.0
+     set rootdir /home/cosmorak/Programs/opencv/local
+     prepend-path PATH              $rootdir/bin
+     prepend-path LD_LIBRARY_PATH   $rootdir/lib
+     prepend-path CMAKE_MODULE_PATH $rootdir/lib/cmake/opencv4
+     prepend-path PYTHONPATH        $rootdir/lib/python3.6/dist-packages
 
 OpenCV - build from source:
   ~> sudo apt-get install build-essential cmake git unzip pkg-config zlib1g-dev
