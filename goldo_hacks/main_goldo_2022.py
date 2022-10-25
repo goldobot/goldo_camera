@@ -14,6 +14,7 @@ import select
 #Y_horizon = 240
 #Y_horizon = 192
 Y_horizon = 48
+Y_offset_mm = 17
 
 green = (0, 255, 0)
 red = (0, 0, 255)
@@ -224,16 +225,16 @@ for frame in camera.capture_continuous(rawCapture1, format="bgr", use_video_port
     #print(corners, ids)
     frame_markers = aruco.drawDetectedMarkers(image, corners, ids)
     buff = b''
-    my_x = []
-    my_y = []
     detected_shapes = []
     for i in range(len(corners)):
         id = int(ids[i])
         c=corners[i]
+        my_x = []
+        my_y = []
         for j in range(0,4):
             my_x.append(c[0,j,0])
             my_y.append(c[0,j,1])
-            #print ("  {} {}".format(c[0,j,0], c[0,j,1]))
+            print ("  {} {}".format(c[0,j,0], c[0,j,1]))
         max_x = int(max(my_x))
         min_x = int(min(my_x))
         max_y = int(max(my_y))
@@ -245,6 +246,7 @@ for frame in camera.capture_continuous(rawCapture1, format="bgr", use_video_port
     nearest_x = 3000
     nearest_y = 0
     obj_attr = 0
+    hit = False
     for shape in detected_shapes:
         shape_id = shape[0]
         shape_x  = shape[1]
@@ -256,8 +258,10 @@ for frame in camera.capture_continuous(rawCapture1, format="bgr", use_video_port
             my_x  = shape_x
             my_y  = shape_y
             (my_Xr, my_Yr) = P_map[my_x][my_y]
+            my_Yr = my_Yr + Y_offset_mm
             print (" <{}, {}> -> <{}, {}>".format(my_x, my_y, my_Xr, my_Yr))
-            if (nearest_x>my_Xr) :
+            if (nearest_x>my_Xr) and (shape_id==13):
+                hit = True
                 nearest_x = my_Xr
                 nearest_y = my_Yr
                 obj_attr = shape_id
@@ -266,8 +270,9 @@ for frame in camera.capture_continuous(rawCapture1, format="bgr", use_video_port
 
     print("dt={}".format(t1-t0))
     print()
-    msg_detect = struct.pack("<IIii",0x7d7f1892,obj_attr,int(nearest_x),int(nearest_y))
-    pub_socket_detection.send(msg_detect)
+    if (hit):
+        msg_detect = struct.pack("<IIii",0x7d7f1892,obj_attr,int(nearest_x),int(nearest_y))
+        pub_socket_detection.send(msg_detect)
 
     #time.sleep(1.0)
     i_desc, o_desc, e_desc = select.select([sys.stdin], [], [], 0.1)
