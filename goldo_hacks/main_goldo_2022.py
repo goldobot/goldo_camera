@@ -234,7 +234,7 @@ for frame in camera.capture_continuous(rawCapture1, format="bgr", use_video_port
         for j in range(0,4):
             my_x.append(c[0,j,0])
             my_y.append(c[0,j,1])
-            print ("  {} {}".format(c[0,j,0], c[0,j,1]))
+            #print ("  {} {}".format(c[0,j,0], c[0,j,1]))
         max_x = int(max(my_x))
         min_x = int(min(my_x))
         max_y = int(max(my_y))
