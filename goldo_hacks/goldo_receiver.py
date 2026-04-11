@@ -4,7 +4,7 @@ import zmq
 import struct
 import numpy as np
 
-ip = "192.168.0.222"
+ip = "192.168.0.111"
 #scale_rate = 1.5
 scale_rate = 2.0
 
