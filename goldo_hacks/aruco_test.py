@@ -88,7 +88,7 @@ while True:
     iter=iter+1
 
     #cv2.imshow("test", frame)
-    cv2.imshow("test", frame_markers)
+    #cv2.imshow("test", frame_markers)
 
     if cv2.waitKey(1) == 27:
         break
