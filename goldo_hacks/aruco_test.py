@@ -7,6 +7,7 @@ import sys
 sys.path.append("../")
 import math
 import select
+import os
 
 import numpy as np
 from scipy.spatial import Delaunay
@@ -146,6 +147,8 @@ iter=0
 while True:
     frame = picam2.capture_array()
 
+    timestamp = time.time()
+
     gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
 
     corners, ids, rejectedImgPoints = detector.detectMarkers(gray)
@@ -176,15 +179,16 @@ while True:
 
     if (iter%10==0):
         detected_shapes = []
+        detections = []
         for i in range(len(corners)):
-            id = int(ids[i])
+            my_id = int(ids[i])
             c=corners[i]
             my_x = []
             my_y = []
             for j in range(0,4):
                 my_x.append(c[0,j,0])
                 my_y.append(c[0,j,1])
-                #if (id==36) or (id==47):
+                #if (my_id==36) or (my_id==47):
                 #    print ("  {} {}".format(c[0,j,0], c[0,j,1]))
             max_x = int(max(my_x))
             min_x = int(min(my_x))
@@ -192,12 +196,21 @@ while True:
             min_y = int(min(my_y))
             x_pix = int(sum(my_x)/len(my_x))
             y_pix = int(sum(my_y)/len(my_y))
-            detected_shapes.append((id,x_pix,y_pix))
-            if (id==36) or (id==47):
+            detected_shapes.append((my_id,x_pix,y_pix))
+            if (my_id==36) or (my_id==47):
                 x_real, y_real = map_pixel_to_real(x_pix,y_pix)
-                print ("  #{} : <{:.1f},{:.1f}> [{},{}]".format(id,x_real,y_real,x_pix,y_pix))
+                print ("  #{} : <{:.1f},{:.1f}> [{},{}]".format(my_id,x_real,y_real,x_pix,y_pix))
+                detections.append((my_id,x_real,y_real))
         print("----------------")
         print()
+
+        # FIXME : DEBUG : quick hack
+        with open("/tmp/detections.txt.tmp", "w") as f:
+            for i in range(len(detections)):
+                my_id, x_real, y_real = detections[i]
+                f.write(f"{timestamp} {my_id} {x_real} {y_real}\n")
+        os.rename("/tmp/detections.txt.tmp", "/tmp/detections.txt")
+
     iter=iter+1
 
     #cv2.imshow("test", frame)
