@@ -198,7 +198,9 @@ while True:
             y_pix = int(sum(my_y)/len(my_y))
             detected_shapes.append((my_id,x_pix,y_pix))
             if (my_id==36) or (my_id==47):
-                x_real, y_real = map_pixel_to_real(x_pix,y_pix)
+                result = map_pixel_to_real(x_pix,y_pix)
+                if result != None:
+                    x_real, y_real = result
                 print ("  #{} : <{:.1f},{:.1f}> [{},{}]".format(my_id,x_real,y_real,x_pix,y_pix))
                 detections.append((my_id,x_real,y_real))
         print("----------------")
