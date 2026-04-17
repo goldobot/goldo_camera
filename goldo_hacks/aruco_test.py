@@ -201,8 +201,8 @@ while True:
                 result = map_pixel_to_real(x_pix,y_pix)
                 if result != None:
                     x_real, y_real = result
-                print ("  #{} : <{:.1f},{:.1f}> [{},{}]".format(my_id,x_real,y_real,x_pix,y_pix))
-                detections.append((my_id,x_real,y_real))
+                    print ("  #{} : <{:.1f},{:.1f}> [{},{}]".format(my_id,x_real,y_real,x_pix,y_pix))
+                    detections.append((my_id,x_real,y_real))
         print("----------------")
         print()
 
