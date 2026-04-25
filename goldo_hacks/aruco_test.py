@@ -213,6 +213,13 @@ while True:
                 f.write(f"{timestamp} {my_id} {x_real} {y_real}\n")
         os.rename("/tmp/detections.txt.tmp", "/tmp/detections.txt")
 
+        if (len(detections)==3) or (len(detections)==4):
+            with open("/tmp/last_good_detections.txt.tmp", "w") as f:
+                for i in range(len(detections)):
+                    my_id, x_real, y_real = detections[i]
+                    f.write(f"{timestamp} {my_id} {x_real} {y_real}\n")
+                os.rename("/tmp/last_good_detections.txt.tmp", "/tmp/last_good_detections.txt")
+
     iter=iter+1
 
     #cv2.imshow("test", frame)
